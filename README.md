@@ -16,3 +16,5 @@ Desktop: Windows > 10, Linux Debian based (any 64-bit), macOS > El Capitan (10.1
 - темное и светлое оформление
 - настройка автоматического поиска и параметров опроса
 - настройка уведомлений
+
+![Screenshots](https://github.com/nickolasdzemian/res/blob/main/blobs/disp_sample.png)
