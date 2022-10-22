@@ -36,7 +36,7 @@ Future<void> serve() async {
     port,
   );
 
-  print('Serving at http://${server.address.host}:${server.port}');
+  // print('Serving at http://${server.address.host}:${server.port}');
   _watch.start();
 }
 

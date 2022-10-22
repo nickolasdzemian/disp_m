@@ -1,22 +1,23 @@
 part of '../../settings.dart';
 
-String appName = '';
-String packageName = '';
-String version = '';
-String buildNumber = '';
-aboutInfo() async {
-  PackageInfo packageInfo = await PackageInfo.fromPlatform();
-  appName = packageInfo.appName;
-  packageName = packageInfo.packageName;
-  version = packageInfo.version;
-  buildNumber = packageInfo.buildNumber;
+final Uri _url = Uri.parse(resp.versionUrl);
+Future<void> _launchUrl() async {
+  if (!await launchUrl(_url)) {
+    throw 'Could not launch $_url';
+  }
 }
 
-Future<void> _dialogAbout(context) async {
-  await aboutInfo();
-  Future<AudioPlayer> playCat() async {
-    AudioCache cache = AudioCache();
-    return await cache.play("/audios/Cat.mp3");
+Future<void> _dialogAbout(context, update, appName, packageName, version,
+    buildNumber, newVersion) async {
+  await newVersion();
+
+  AudioInApp audioInApp = AudioInApp();
+  Future playCat() async {
+    await audioInApp.createNewAudioCache(
+        playerId: 'cat',
+        route: 'audios/NeptunCat.mp3',
+        audioInAppType: AudioInAppType.determined);
+    await audioInApp.play(playerId: 'cat');
   }
 
   return showDialog<void>(
@@ -85,27 +86,77 @@ Future<void> _dialogAbout(context) async {
                       ])
                 ])),
         actions: <Widget>[
-          TextButton(
-            style: TextButton.styleFrom(
-              textStyle: Theme.of(context).textTheme.labelLarge,
-            ),
-            child: const Text('Закрыть'),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-          ),
-          TextButton(
-            style: TextButton.styleFrom(
-              textStyle: Theme.of(context).textTheme.labelLarge,
-            ),
-            child: Text(
-                style:
-                    TextStyle(color: Theme.of(context).colorScheme.secondary),
-                'Проверить обновления'),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextButton(
+                style: TextButton.styleFrom(
+                  textStyle: Theme.of(context).textTheme.labelLarge,
+                ),
+                child: Text(
+                    style:
+                        TextStyle(color: Theme.of(context).colorScheme.error),
+                    'Сброс и очистка'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        duration: const Duration(seconds: 15),
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        content: const Text(
+                            'Нажмите и удерживайте красную кнопку для сброса всех настроек и удаления всех данных\nЭто действие невозможно отменить! Для возобновления работы системы потребуется повторная настройка и конфигурация!')),
+                  );
+                },
+                // *** RESET AND DELETE ***
+                onLongPress: () {
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        duration: const Duration(seconds: 30),
+                        backgroundColor: Theme.of(context).colorScheme.error,
+                        content: const Text(
+                            'Внимание! Все данные удалены!\nДля завершения сброса приложение будет закрыто, дождитесь его остановки или перезапустите для отмены операции')),
+                  );
+                  Future.delayed(const Duration(seconds: 15), () {
+                    // Hive.deleteFromDisk();
+                    // Avoid closing boxes because of timeout err state
+                    final dir = Directory(appDataDirectory);
+                    dir.deleteSync(recursive: true);
+
+                    // SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+                    // Fix Windows call
+                    debugger();
+                    exit(0);
+                  });
+                },
+              ),
+              Row(children: [
+                TextButton(
+                  style: TextButton.styleFrom(
+                    textStyle: Theme.of(context).textTheme.labelLarge,
+                  ),
+                  child: const Text('Закрыть'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+                TextButton(
+                  style: TextButton.styleFrom(
+                    textStyle: Theme.of(context).textTheme.labelLarge,
+                  ),
+                  child: Text(
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.secondary),
+                      '$update'),
+                  onPressed: () {
+                    update != 'Обновлений нет'
+                        ? _launchUrl()
+                        : Navigator.of(context).pop();
+                  },
+                )
+              ]),
+            ],
+          )
         ],
       );
     },

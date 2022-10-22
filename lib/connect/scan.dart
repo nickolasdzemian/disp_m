@@ -1,7 +1,7 @@
 // import 'dart:developer';
 import 'dart:io';
 import 'package:process_run/shell_run.dart';
-import 'package:neptun_m/lib/modbus/lib/modbus.dart' as modbus;
+import 'package:modbus/modbus.dart' as modbus;
 import 'package:neptun_m/db/db.dart';
 
 var controller = ShellLinesController();
@@ -64,7 +64,8 @@ class Scan {
           allMACs.removeAt(i);
           i--;
         }
-        int j = i < allIPs.length - 1 ? i + 1 : i; // TODO Windows/EMPTY -1 BUG?
+        i < 0 ? i = 1 : null; // FIX WIN -1 BUG
+        int j = i < allIPs.length - 1 ? i + 1 : i;
         if (j != i && allIPs.isNotEmpty && allMACs.isNotEmpty) {
           if (allIPs[i] == allIPs[j] || allMACs[i] == allMACs[j]) {
             allIPs.removeAt(i);
@@ -119,6 +120,11 @@ class Scan {
             allD.add(Scan(toProceed[i].ip, toProceed[i].mac, toProceed[i].id));
           }
         } catch (e) {
+          DataBase.updateEventList([
+            4,
+            'Ошибка идентификации устройства modbus',
+            e.toString(),
+          ]);
           await client.close();
           // String v = e.toString();
           // v = v.substring(0, 35);
@@ -158,18 +164,48 @@ class Scan {
           // // } // *****************************************************************
         } finally {
           await client.close();
-          if (ex.isEmpty) {
-            DataBase.addNew(allD);
-          } else {
-            DataBase.updateIP(allD);
-          }
-          if (setCount != null) {
-            await setCount();
-          }
         }
+      }
+      if (ex.isEmpty) {
+        DataBase.addNew(allD);
+      } else {
+        DataBase.updateIP(allD);
+      }
+      if (setCount != null) {
+        await setCount();
       }
     }
     // inspect(all);
     return allD;
+  }
+
+  static Future checkerOneOf(someNew) async {
+    bool someNewPassed = false;
+    var client = modbus.createTcpClient(someNew.ip,
+        port: 503,
+        mode: modbus.ModbusMode.rtu,
+        timeout: doradura,
+        unitId: someNew.id);
+    try {
+      await client.connect();
+      var response = await client.readHoldingRegisters(0x05, 1);
+
+      if (response.isNotEmpty) {
+        someNewPassed = true;
+      } else {
+        someNewPassed = false;
+      }
+    } catch (e) {
+      DataBase.updateEventList([
+        4,
+        'Ошибка идентификации при ручном добавлении',
+        e.toString(),
+      ]);
+      someNewPassed = false;
+      await client.close();
+    } finally {
+      await client.close();
+    }
+    return someNewPassed;
   }
 }

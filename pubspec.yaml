@@ -17,8 +17,8 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.01.02+1
-subversion: 'ZP - 1.01.03'
+version: 1.01.22+1
+subversion: 'ZP - 1.01.22'
 
 environment:
   sdk: '>=2.18.0 <3.0.0'
@@ -32,6 +32,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  # modbus:
+  #   path: ./lib/lib/modbus/
+  window_size:
+    git:
+      url: https://github.com/google/flutter-desktop-embedding.git
+      path: plugins/window_size
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -50,12 +56,28 @@ dependencies:
   internet_connection_checker: ^0.0.1+4
   liquid_progress_indicator: ^0.4.0
   package_info_plus: ^1.4.3+1
-  audioplayers: ^0.18.3
-  # Do not upgrade audioplayers: ^0.18.0
+  url_launcher: ^6.1.5
+  reorderable_grid: ^1.0.4
+  flutter_shake_animated: ^0.0.5
+  modbus: ^0.2.0
+  wakelock: ^0.6.2
+  # just_audio: ^0.9.29
+  # just_audio_windows: ^0.1.0
+  blinking_text: ^1.0.2
+  local_notifier: ^0.1.5
+  intl: ^0.17.0
+  flutter_excel: ^1.0.1
+  audio_in_app: ^1.0.1
+  badges: ^2.0.3
+  syncfusion_flutter_datepicker: ^20.3.50
+  syncfusion_localizations: ^20.3.50
+  flutter_localizations:
+    sdk: flutter
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons: "^0.10.0"
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -79,7 +101,7 @@ flutter:
   assets:
   - assets/images/
   - assets/audios/
-  - assets/audios/Cat.mp3
+  - assets/audios/NeptunCat.mp3
 
   # To add assets to your application, add an assets section, like this:
   # assets:

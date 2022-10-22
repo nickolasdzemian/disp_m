@@ -34,12 +34,15 @@ Column settingsBoxAdd(context, bigValue, addDevices, adding, addDevice,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(style: descStyle(context), 'Описание режимов добавления:\n'),
+          Text(style: descStyle(context), '\nОписание режимов добавления:\n'),
           TextButton(
             onPressed: () {
               dialogHelp(context, helpTitle, help);
             },
-            child: Text(style: descButton(context), 'открыть\n'),
+            child: Text(
+                textAlign: TextAlign.end,
+                style: descButton(context),
+                '\nоткрыть\n'),
           ),
         ],
       ),

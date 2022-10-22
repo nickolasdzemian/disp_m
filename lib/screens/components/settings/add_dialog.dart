@@ -5,13 +5,12 @@ String id0 = '';
 String mac0 = '';
 List newDevice0 = [];
 
-void writeDevice0(newDevice0, setCount) async {
+Future writeDevice0(newDevice0, setCount) async {
   ip0 = '';
   id0 = '';
   mac0 = '';
   await DataBase.addNew(newDevice0);
   setCount();
-  newDevice0 = [];
 }
 
 bool validUID(value) {
@@ -35,6 +34,7 @@ bool validUID(value) {
 }
 
 bool validID(value, all) {
+  all = allDevicesDb();
   bool res = true;
   if (all.isNotEmpty) {
     for (int i = 0; i < all.length; i++) {
@@ -58,7 +58,42 @@ bool validMC(value) {
   return res;
 }
 
-Future<void> _dialogBuilder(context, all, formKey, setCount) {
+bool blockAddNewBtn = false;
+
+void addSomeNewManually(formKey, context, setCount, stopTimer) async {
+  blockAddNewBtn = true;
+  int id00 = id0 == '' ? 240 : int.parse(id0);
+  bool scanBoolResult = await Scan.checkerOneOf(Scan(ip0, mac0, id00));
+  try {
+    if (formKey.currentState!.validate() && scanBoolResult) {
+      // if (formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            backgroundColor: CupertinoColors.systemGreen.withOpacity(0.6),
+            content: const Text('Успешно добавлено')),
+      );
+      stopTimer();
+      newDevice0.add(Scan(ip0, mac0, id00));
+      await writeDevice0(newDevice0, setCount);
+      blockAddNewBtn = false;
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            backgroundColor: Theme.of(context).colorScheme.error,
+            content: const Text(
+                'Проверка устройства не пройдена, устройство не добавлено')),
+      );
+      SystemSound.play(SystemSoundType.alert);
+      blockAddNewBtn = false;
+    }
+    newDevice0 = [];
+    Navigator.of(context).pop();
+  } catch (err) {
+    print;
+  }
+}
+
+Future<void> _dialogBuilder(context, all, formKey, setCount, stopTimer) {
   return showDialog<void>(
     context: context,
     builder: (BuildContext contextAdd) {
@@ -108,6 +143,9 @@ Future<void> _dialogBuilder(context, all, formKey, setCount) {
                           labelText: 'UnitID устройства (по умолчанию 240)',
                         ),
                         onChanged: (value) => id0 = value,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly
+                        ],
                         validator: (String? value) {
                           return (value != null && validUID(value))
                               ? null
@@ -154,21 +192,15 @@ Future<void> _dialogBuilder(context, all, formKey, setCount) {
             style: TextButton.styleFrom(
               textStyle: Theme.of(context).textTheme.labelLarge,
             ),
+            onPressed: !blockAddNewBtn
+                ? () {
+                    addSomeNewManually(formKey, context, setCount, stopTimer);
+                  }
+                : null,
             child: Text(
                 style:
                     TextStyle(color: Theme.of(context).colorScheme.secondary),
                 'Добавить'),
-            onPressed: () {
-              if (formKey.currentState!.validate()) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Успешно добавлено')),
-                );
-                int id00 = id0 == '' ? 240 : int.parse(id0);
-                newDevice0.add(Scan(ip0, mac0, id00));
-                writeDevice0(newDevice0, setCount);
-                Navigator.of(context).pop();
-              }
-            },
           ),
         ],
       );

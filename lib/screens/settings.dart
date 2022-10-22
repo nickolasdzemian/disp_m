@@ -1,14 +1,22 @@
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:neptun_m/connect/scan.dart';
 import 'package:neptun_m/lib/getters.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:audioplayers/audioplayers.dart';
-import 'package:audioplayers/audio_cache.dart';
 import 'package:neptun_m/db/db.dart';
 import 'package:neptun_m/info/help.dart';
 import 'package:neptun_m/screens/assets.dart';
+import 'package:neptun_m/lib/remote_config.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:neptun_m/rebuilder.dart';
+
+import 'package:flutter/services.dart';
+import 'dart:io';
+// import 'package:just_audio/just_audio.dart';
+import 'package:audio_in_app/audio_in_app.dart';
+
 part 'components/settings/appbar.dart';
 part 'components/dialog_help.dart';
 part 'components/settings/box.dart';
@@ -39,7 +47,9 @@ class _Settings extends State<AppSettingsPage> {
   int found = devices.values.toList().length;
   bool _adding = false;
   final formKey = GlobalKey<FormState>();
+  String update = 'Обновлений нет';
 
+  bool scanMode = settings.get('scanMode');
   int interval = settings.get('interval');
   bool autoScan = settings.get('autoScan');
   bool server = settings.get('server');
@@ -51,9 +61,15 @@ class _Settings extends State<AppSettingsPage> {
 
   void setCount() {
     var newall = allDevicesDb();
-    setState(() {
-      found = newall.length;
-    });
+    if (mounted) {
+      setState(() {
+        found = newall.length;
+      });
+    }
+  }
+
+  void stopTimer() {
+    context.read<StatesModel>().stopTimer();
   }
 
   void addDevices() async {
@@ -63,14 +79,16 @@ class _Settings extends State<AppSettingsPage> {
       });
       stopTimer();
       await Scan.getAllDevices([], setCount);
-      setState(() {
-        _adding = false;
-      });
+      if (mounted) {
+        setState(() {
+          _adding = false;
+        });
+      }
     }
   }
 
   void addDevice() async {
-    _dialogBuilder(context, all, formKey, setCount);
+    _dialogBuilder(context, all, formKey, setCount, stopTimer);
   }
 
   setInterval(a) async {
@@ -96,6 +114,12 @@ class _Settings extends State<AppSettingsPage> {
 
   void state(k, v) async {
     switch (k) {
+      case 'scanMode':
+        // context.read<StatesModel>().stopTimer();
+        setState(() {
+          scanMode = v;
+        });
+        break;
       case 'autoScan':
         setState(() {
           autoScan = v;
@@ -160,41 +184,98 @@ class _Settings extends State<AppSettingsPage> {
     });
   }
 
+  String appName = '';
+  String packageName = '';
+  String version = '';
+  String buildNumber = '';
+  aboutInfo() async {
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    return packageInfo;
+  }
+
+  newVersion() {
+    aboutInfo().then((packageInfo) => {
+          appName = packageInfo.appName,
+          packageName = packageInfo.packageName,
+          version = packageInfo.version,
+          buildNumber = packageInfo.buildNumber,
+          setState(() {
+            if (resp != null && resp.version != version) {
+              update = 'Доступна новая версия:\nнажать для загрузки';
+            } else {
+              update = 'Обновлений нет';
+            }
+          })
+        });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => newVersion());
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<StatesModel, List>(
         buildWhen: (previousState, state) {
           return previousState != state;
         },
-        builder: (context, devicesStatesNew) => Center(
-                child: Scaffold(
-              appBar: settingsAppBar(context, themeMode, changeTheme),
-              body: Column(children: [
-                Wrap(
-                  clipBehavior: Clip.antiAliasWithSaveLayer,
-                  children: [
-                    settingsBoxView(
-                        context,
-                        settingsBoxAdd(context, found, addDevices, _adding,
-                            addDevice, helpTitle, connectHelp, _dialogHelp)),
-                    settingsBoxView(
-                        context,
-                        settingsAutoInterval(
-                            context, interval, setInterval, _adding)),
-                  ],
-                ),
-                settingsBoxWide(
-                    context,
-                    settingsOther(context, autoScan, server, serverPort,
-                        notifications, reserved, updates, state)),
-              ]),
-              floatingActionButton: FloatingActionButton(
-                onPressed: (() {
-                  // _increment();
-                }),
-                tooltip: 'Increment',
-                child: const Icon(Icons.account_tree_rounded),
+        builder: (context, devicesStatesNew) => Scaffold(
+              appBar: settingsAppBar(context, themeMode, changeTheme, update,
+                  appName, packageName, version, buildNumber, newVersion),
+              body: Center(
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Wrap(
+                        children: [
+                          settingsBoxView(
+                              context,
+                              settingsBoxAdd(
+                                  context,
+                                  found,
+                                  addDevices,
+                                  _adding,
+                                  addDevice,
+                                  helpTitle,
+                                  connectHelp,
+                                  _dialogHelp)),
+                          settingsBoxView(
+                              context,
+                              settingsAutoInterval(context, interval,
+                                  setInterval, _adding, state, scanMode)),
+                        ],
+                      ),
+                      settingsBoxWide(
+                          context,
+                          settingsOther(context, autoScan, server, serverPort,
+                              notifications, reserved, updates, state)),
+                    ]),
               ),
-            )));
+              floatingActionButton: FloatingActionButton(
+                heroTag: "btn3",
+                onPressed: (() {
+                  run = false;
+                  stopTimer();
+                  Rebuilder.of(context)?.rebuild();
+                  // int delay = interval + allDevicesDb().length;
+                  // ScaffoldMessenger.of(context).showSnackBar(
+                  //   SnackBar(
+                  //       duration: Duration(seconds: delay),
+                  //       backgroundColor: Theme.of(context).colorScheme.primary,
+                  //       content: Text(
+                  //           'Ожидайте, Перезапуск будет совершен через $delay сек')),
+                  // );
+                  // Future.delayed(Duration(seconds: delay), () {
+                  //   Rebuilder.of(context)?.rebuild();
+                  // });
+                }),
+                tooltip: 'Перезапустить опрос устройств и\nоболочку приложения',
+                child: Icon(
+                    color: Theme.of(context).colorScheme.error,
+                    CupertinoIcons.restart),
+              ),
+            ));
   }
 }

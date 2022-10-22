@@ -12,24 +12,27 @@ class Sensor {
 
 class Device {
   @HiveField(0)
-  String ip;
+  int index;
   @HiveField(1)
-  String mac;
+  String ip;
   @HiveField(2)
-  int id;
+  String mac;
   @HiveField(3)
-  String name;
+  int id;
   @HiveField(4)
-  List lines;
+  String name;
   @HiveField(5)
-  List sensors;
+  List lines;
   @HiveField(6)
+  List sensors;
+  @HiveField(7)
   List zones;
-  Device(this.ip, this.mac, this.id, this.name, this.lines, this.sensors,
-      this.zones);
+  Device(this.index, this.ip, this.mac, this.id, this.name, this.lines,
+      this.sensors, this.zones);
 
   Device.fromJson(Map<String, dynamic> json)
-      : ip = json['ip'],
+      : index = json['index'],
+        ip = json['ip'],
         id = json['id'],
         mac = json['mac'],
         name = json['name'],
@@ -38,6 +41,7 @@ class Device {
         zones = json['zones'];
   Map<String, dynamic> toJson() {
     return {
+      'index': index,
       'ip': ip,
       'id': id,
       'mac': mac,
@@ -96,26 +100,65 @@ class SettingList {
 
 class EventItem {
   @HiveField(0)
-  String timestamp;
+  DateTime timestamp;
   @HiveField(1)
-  String evName;
+  String formatedStamp;
   @HiveField(2)
-  String deviceName;
+  int evType;
   @HiveField(3)
-  List triggers;
-  EventItem(this.timestamp, this.evName, this.deviceName, this.triggers);
+  String evName;
+  @HiveField(4)
+  String deviceName;
+  @HiveField(5)
+  String info;
+  EventItem(this.timestamp, this.formatedStamp, this.evType, this.evName,
+      this.deviceName, this.info);
 
   EventItem.fromJson(Map<String, dynamic> json)
       : timestamp = json['timestamp'],
+        formatedStamp = json['formatedStamp'],
+        evType = json['evType'],
         evName = json['evName'],
         deviceName = json['deviceName'],
-        triggers = json['triggers'];
+        info = json['info'];
   Map<String, dynamic> toJson() {
     return {
       'timestamp': timestamp,
+      'formatedStamp': formatedStamp,
+      'evType': evType,
       'evName': evName,
       'deviceName': deviceName,
-      'triggers': triggers,
+      'info': info,
     };
   }
+}
+
+class RadioFinal {
+  String name = '';
+  String param = '';
+  int battery = 0;
+  int signal = 0;
+  bool isLost = false;
+  bool isDischarged = false;
+  bool alarm = false;
+  RadioFinal(this.name, this.param, this.battery, this.signal, this.isLost,
+      this.isDischarged, this.alarm);
+}
+
+class AlarmNoti {
+  int type = 0;
+  String title = '';
+  String body = '';
+  AlarmNoti(this.type, this.title, this.body);
+}
+
+class Equalal {
+  int index = 0;
+  bool state = false;
+  bool alarm1 = false;
+  bool alarm2 = false;
+  bool sensorIsLost = false;
+  bool sensorIsDischarged = false;
+  Equalal(this.index, this.state, this.alarm1, this.alarm2, this.sensorIsLost,
+      this.sensorIsDischarged);
 }

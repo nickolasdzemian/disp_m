@@ -1,14 +1,14 @@
-part of './getters.dart';
-
 class DeviceState {
+  int index;
   bool state; // Online/Offline
   String name;
   List linesNames;
   List sensorsNames;
   List zones;
   List registersStates;
-  DeviceState(this.state, this.name, this.linesNames, this.sensorsNames,
-      this.zones, this.registersStates);
+  List radioParams;
+  DeviceState(this.index, this.state, this.name, this.linesNames,
+      this.sensorsNames, this.zones, this.registersStates, this.radioParams);
 }
 
 class RegisterState {

@@ -12,7 +12,8 @@ Future<void> _dialogHelp(context, title, help) {
               CupertinoIcons.book),
           Text('  $title')
         ]),
-        content: SizedBox(child: Text(help)),
+        content: SingleChildScrollView(
+            scrollDirection: Axis.vertical, child: Text(help)),
         actions: <Widget>[
           TextButton(
             style: TextButton.styleFrom(

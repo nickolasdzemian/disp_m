@@ -6,6 +6,7 @@ class DeviceAdapter extends TypeAdapter<Device> {
 
   @override
   Device read(BinaryReader reader) {
+    final index = reader.read();
     final ip = reader.read();
     final mac = reader.read();
     final id = reader.read();
@@ -13,11 +14,12 @@ class DeviceAdapter extends TypeAdapter<Device> {
     final lines = reader.read();
     final sensors = reader.read();
     final zones = reader.read();
-    return Device(ip, mac, id, name, lines, sensors, zones);
+    return Device(index, ip, mac, id, name, lines, sensors, zones);
   }
 
   @override
   void write(BinaryWriter writer, Device obj) {
+    writer.write(obj.index);
     writer.write(obj.ip);
     writer.write(obj.mac);
     writer.write(obj.id);
@@ -46,7 +48,7 @@ class SettingIntAdapter extends TypeAdapter<SettingInt> {
 
 class SettingBoolAdapter extends TypeAdapter<SettingBool> {
   @override
-  final typeId = 11;
+  final typeId = 12;
 
   @override
   SettingBool read(BinaryReader reader) {
@@ -62,7 +64,7 @@ class SettingBoolAdapter extends TypeAdapter<SettingBool> {
 
 class SettingStringAdapter extends TypeAdapter<SettingString> {
   @override
-  final typeId = 11;
+  final typeId = 13;
 
   @override
   SettingString read(BinaryReader reader) {
@@ -78,7 +80,7 @@ class SettingStringAdapter extends TypeAdapter<SettingString> {
 
 class SettingListAdapter extends TypeAdapter<SettingList> {
   @override
-  final typeId = 11;
+  final typeId = 14;
 
   @override
   SettingList read(BinaryReader reader) {
@@ -99,17 +101,22 @@ class EventListAdapter extends TypeAdapter<EventItem> {
   @override
   EventItem read(BinaryReader reader) {
     final timestamp = reader.read();
+    final formatedStamp = reader.read();
+    final evType = reader.read();
     final evName = reader.read();
     final deviceName = reader.read();
-    final triggers = reader.read();
-    return EventItem(timestamp, evName, deviceName, triggers);
+    final info = reader.read();
+    return EventItem(
+        timestamp, formatedStamp, evType, evName, deviceName, info);
   }
 
   @override
   void write(BinaryWriter writer, EventItem obj) {
     writer.write(obj.timestamp);
+    writer.write(obj.formatedStamp);
+    writer.write(obj.evType);
     writer.write(obj.evName);
     writer.write(obj.deviceName);
-    writer.write(obj.triggers);
+    writer.write(obj.info);
   }
 }

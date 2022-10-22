@@ -21,6 +21,7 @@ class ThemeNotifier with ChangeNotifier {
 
 ThemeData lightTheme = ThemeData(
     useMaterial3: true,
+    visualDensity: VisualDensity.adaptivePlatformDensity,
     colorScheme: lightColorScheme,
     appBarTheme: AppBarTheme(
       toolbarHeight: 100,
@@ -33,10 +34,15 @@ ThemeData lightTheme = ThemeData(
       elevation: 3.0,
       shadowColor: lightColorScheme.shadow,
     ),
-    scaffoldBackgroundColor: const Color.fromARGB(255, 230, 230, 230));
+    scrollbarTheme: ScrollbarThemeData(
+        thumbColor:
+            MaterialStateProperty.all(const Color.fromARGB(255, 0, 172, 225))),
+    scaffoldBackgroundColor: const Color.fromARGB(255, 230, 230, 230),
+    highlightColor: const Color.fromARGB(255, 0, 172, 225));
 
 ThemeData darkTheme = ThemeData(
     useMaterial3: true,
+    visualDensity: VisualDensity.adaptivePlatformDensity,
     colorScheme: darkColorScheme,
     appBarTheme: AppBarTheme(
       toolbarHeight: 100,
@@ -49,4 +55,8 @@ ThemeData darkTheme = ThemeData(
       elevation: 3.0,
       shadowColor: darkColorScheme.shadow,
     ),
-    scaffoldBackgroundColor: const Color(0x00303030));
+    scrollbarTheme: ScrollbarThemeData(
+        thumbColor:
+            MaterialStateProperty.all(const Color.fromARGB(255, 0, 172, 225))),
+    scaffoldBackgroundColor: const Color.fromARGB(255, 30, 30, 30),
+    highlightColor: const Color.fromARGB(255, 0, 172, 225));

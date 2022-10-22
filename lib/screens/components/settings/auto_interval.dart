@@ -1,6 +1,8 @@
 part of '../../settings.dart';
 
-Column settingsAutoInterval(context, bigValue, setInterval, adding) {
+Column settingsAutoInterval(
+    context, bigValue, setInterval, adding, state, scanMode) {
+  String modeScanner = !scanMode ? '\n  рекурсивный\n' : '\n\n  интервальный';
   return Column(
     mainAxisAlignment: MainAxisAlignment.spaceBetween,
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -37,7 +39,16 @@ Column settingsAutoInterval(context, bigValue, setInterval, adding) {
         children: [
           Text(
               style: descStyle(context),
-              'Частота опроса устройств в секундах.\nПоддерживаемый диапазон от 1 до 100'),
+              'Режим опроса устройств:\nожидание ответа (рекурсивный)\nслепой опрос (интервальный)'),
+          TextButton(
+            onPressed: () {
+              state('scanMode', !scanMode);
+            },
+            child: Text(
+                textAlign: TextAlign.end,
+                style: descButton(context),
+                modeScanner),
+          ),
         ],
       ),
       Column(
