@@ -120,8 +120,11 @@ Future<void> _dialogAbout(context, update, appName, packageName, version,
                   Future.delayed(const Duration(seconds: 15), () {
                     // Hive.deleteFromDisk();
                     // Avoid closing boxes because of timeout err state
-                    final dir = Directory(appDataDirectory);
-                    dir.deleteSync(recursive: true);
+                    // final dir = Directory(appDataDirectory);
+                    // dir.deleteSync(recursive: true);
+                    devices.clear();
+                    settings.clear();
+                    events.clear();
 
                     // SystemChannels.platform.invokeMethod('SystemNavigator.pop');
                     // Fix Windows call
