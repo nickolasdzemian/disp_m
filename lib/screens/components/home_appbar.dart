@@ -45,6 +45,8 @@ AppBar homeAppBar(
                   Navigator.pushNamed(context, '/settings').then((_) {
                     final nextLength = devices.values.toList();
                     if (!run && initialLength != nextLength.length) {
+                      equalal0 = [];
+                      equalal1 = [];
                       Rebuilder.of(context)?.rebuild();
                     } else if (!run && initialLength == nextLength.length) {
                       started();
