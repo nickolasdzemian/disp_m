@@ -19,10 +19,10 @@ checkAlarms(
     ds, context, setAlarmsArrState, a, al, closeThisAlert, setThisHistory) {
   if (ds.isNotEmpty) {
     if (equalal0.isEmpty || equalal1.isEmpty) {
-      for (int k = 0; k < ds.length; k++) {
         equalal0 = [];
-        equalal0.add(Equalal(ds[k].index, false, false, false, false, false));
         equalal1 = [];
+      for (int k = 0; k < ds.length; k++) {
+        equalal0.add(Equalal(ds[k].index, false, false, false, false, false));
         equalal1.add(Equalal(ds[k].index, false, false, false, false, false));
       }
     }
