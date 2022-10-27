@@ -94,6 +94,8 @@ class _HomePage extends State<HomePage> {
   void initState() {
     super.initState();
     if (allDevicesDb().isNotEmpty && !run) {
+      equalal0 = [];
+      equalal1 = [];
       run = true;
       context.read<StatesModel>().zaloop();
     }
