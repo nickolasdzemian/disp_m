@@ -112,7 +112,7 @@ Future<void> main() async {
   await SentryFlutter.init(
     (options) {
       options.dsn =
-          'https://0fab3f35d0354df48ac143d5a6a96ab4@o4504078561771520.ingest.sentry.io/4504078562820096';
+          '';
       options.tracesSampleRate = 1.0;
       options.debug = false;
       options.enableNativeCrashHandling = true;
