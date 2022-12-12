@@ -4,7 +4,7 @@
 
 ### See demo: [Promo page](https://teploluxe.help/disp)
 
-#### Поддерживаемые ОС
+#### Поддерживаемые ОС:
 Desktop: Windows > 10 (arm, x64-86), Linux Debian based (any 64-bit), macOS > El Capitan (10.12.2, limited by IEEE 802),
 Beta: Android > 6, iOS > 11
 
