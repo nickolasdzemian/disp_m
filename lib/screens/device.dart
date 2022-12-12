@@ -1,4 +1,7 @@
-import 'dart:developer';
+// import 'dart:developer';
+// ignore_for_file: prefer_typing_uninitialized_variables
+
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:neptun_m/db/db.dart';
@@ -22,6 +25,8 @@ part '../screens/components/device/box_radio.dart';
 part 'components/device/radio.dart';
 part 'components/device/edit_dialog_radio.dart';
 part 'components/device/delete_dialog.dart';
+part 'components/device/edit_dialog_cswitch.dart';
+part 'components/device/counters.dart';
 
 part 'components/device/alert_info.dart';
 
@@ -35,6 +40,8 @@ class DeviceScreen extends StatefulWidget {
 class DeviceWidgetState extends State<DeviceScreen> {
   List oneDeviceParams = [];
   List oneDeviceStates = [];
+  List oneDeviceCounters = [];
+  List oneDeviceCountersParams = [];
   bool setInProgress = false;
   final formKey = GlobalKey<FormState>();
   List isThisFirstRun = settings.get('firstStart');
@@ -58,6 +65,20 @@ class DeviceWidgetState extends State<DeviceScreen> {
     });
   }
 
+  void updateoneDeviceCounters(ind, v) {
+    setState(() {
+      oneDeviceCounters[ind] = v;
+      item.countersStates[ind] = v;
+    });
+  }
+
+  void updateoneDeviceCountersParams(ind, v) {
+    setState(() {
+      oneDeviceCountersParams[ind] = v;
+      // item.countersParams[ind] = v;
+    });
+  }
+
   void showInfo(state) {
     if (isThisFirstRun[1] && mounted && !preventAlert && state) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -72,6 +93,25 @@ class DeviceWidgetState extends State<DeviceScreen> {
     }
   }
 
+  Timer? _timer;
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  bool checkedRadio = false;
+  void checkRadio() {
+    String reg0 = oneDeviceStates[0].value;
+    bool addNewRadio = reg0.substring(24, 25) == '1';
+    if (!addNewRadio) {
+      setState(() {
+        checkedRadio = true;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final data =
@@ -80,28 +120,73 @@ class DeviceWidgetState extends State<DeviceScreen> {
     item = data.item;
     itemDb = allDevicesDb()[itemDb.index];
 
-    void getAdditionalParams() async {
+    Duration safe = Duration(milliseconds: thisIDX == item.index ? 750 : 1);
+    Duration loadable = Duration(
+        milliseconds: thisIDX == item.index
+            ? 750
+            : _timer?.tick != null
+                ? 1
+                : 1500);
+
+    void getAdditionalParams(bool retouch) async {
+      retouch && mounted
+          ? setState(() {
+              oneDeviceParams = [];
+              oneDeviceStates = [];
+              oneDeviceCounters = [];
+              oneDeviceCountersParams = [];
+            })
+          : null;
       if (item.state && mounted) {
-        var oneDeviceParamsLoad = await getParams(data.itemDb);
-        if (oneDeviceParamsLoad[0]) {
-          setState(() {
-            oneDeviceParams = oneDeviceParamsLoad[1];
-            oneDeviceStates = item.registersStates;
-          });
-        } else {
-          getAdditionalParams();
-        }
+        Future.delayed(safe, () async {
+          var oneDeviceStateLoad = await getOneDevice(data.itemDb);
+          if (oneDeviceStateLoad[0]) {
+            Future.delayed(loadable, () {
+              if (mounted) {
+                setState(() {
+                  oneDeviceParams = oneDeviceStateLoad[1].radioParams;
+                  oneDeviceStates = oneDeviceStateLoad[1].registersStates;
+                  oneDeviceCounters = oneDeviceStateLoad[1].countersStates;
+                  oneDeviceCountersParams =
+                      oneDeviceStateLoad[1].countersParams;
+                });
+                if (_timer?.tick != null) checkRadio();
+              }
+            });
+          } else {
+            Future.delayed(loadable, () {
+              getAdditionalParams(false);
+            });
+          }
+        });
       }
     }
 
+    void periodicUpdate(v) {
+      _timer?.cancel();
+      _timer = Timer.periodic(
+        const Duration(seconds: 5),
+        (Timer timer) {
+          if (!v || checkedRadio) {
+            setState(() {
+              timer.cancel();
+              checkedRadio = false;
+            });
+          } else {
+            getAdditionalParams(false);
+          }
+        },
+      );
+    }
+
     if (oneDeviceParams.isEmpty) {
-      getAdditionalParams();
+      getAdditionalParams(false);
     }
 
     showInfo(item.state);
 
     return Scaffold(
-        appBar: deviceAppBar(context),
+        appBar: deviceAppBar(context, _timer),
         body: SingleChildScrollView(
             scrollDirection: Axis.vertical,
             child: Center(
@@ -113,7 +198,8 @@ class DeviceWidgetState extends State<DeviceScreen> {
                       220,
                       settingsBase(
                           context, itemDb, formKey, updateItemDb, item.state)),
-                  item.state && oneDeviceParams.isEmpty
+                  item.state &&
+                          (oneDeviceParams.isEmpty || oneDeviceStates.isEmpty)
                       ? Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -135,11 +221,16 @@ class DeviceWidgetState extends State<DeviceScreen> {
                               paramsBoxWide(
                                   context,
                                   300,
-                                  settingsMain(context, itemDb, oneDeviceStates,
-                                      formKey, updateOneDeviceStates)),
+                                  settingsMain(
+                                      context,
+                                      itemDb,
+                                      oneDeviceStates,
+                                      formKey,
+                                      updateOneDeviceStates,
+                                      periodicUpdate)),
                               paramsBoxWide(
                                   context,
-                                  222,
+                                  285,
                                   settingsLines(
                                       context,
                                       itemDb,
@@ -147,7 +238,20 @@ class DeviceWidgetState extends State<DeviceScreen> {
                                       formKey,
                                       updateOneDeviceStates,
                                       updateItemDb,
-                                      item.state)),
+                                      item.state,
+                                      getAdditionalParams)),
+                              paramsBoxRadio(
+                                  context,
+                                  settingsCounters(
+                                      context,
+                                      itemDb,
+                                      oneDeviceCounters,
+                                      oneDeviceCountersParams,
+                                      formKey,
+                                      updateoneDeviceCounters,
+                                      updateoneDeviceCountersParams,
+                                      updateItemDb,
+                                      getAdditionalParams)),
                               paramsBoxRadio(
                                   context,
                                   settingsRadio(
@@ -178,11 +282,4 @@ class DeviceNavArguments {
   final Device itemDb;
 
   DeviceNavArguments(this.item, this.itemDb);
-}
-
-class ScreenArguments {
-  final String title;
-  final String message;
-
-  ScreenArguments(this.title, this.message);
 }

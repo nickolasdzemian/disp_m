@@ -2,7 +2,9 @@ part of '../../device.dart';
 
 Future<void> _dialogBuilderRelay(context, editData, formKey, updateItemDb,
     oneDeviceStates, updateNewRegister) {
-  String title = 'Переключение реле событий';
+  double wsize = MediaQuery.of(context).size.width;
+  String title =
+      wsize > 800 ? 'Переключение реле событий' : 'Переключение реле';
 
   // ignore: no_leading_underscores_for_local_identifiers
   StateSetter _setState;
@@ -60,7 +62,8 @@ Future<void> _dialogBuilderRelay(context, editData, formKey, updateItemDb,
                               updateNewRegister,
                               stateReg,
                               busy,
-                              setBusy)),
+                              setBusy,
+                              wsize > 800)),
                     ],
                   )));
         }),

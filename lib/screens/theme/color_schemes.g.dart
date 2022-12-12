@@ -53,7 +53,7 @@ const darkColorScheme = ColorScheme(
   background: Color.fromARGB(208, 74, 74, 74),
   onBackground: Color.fromARGB(255, 184, 209, 226),
   surface: Color.fromARGB(255, 47, 47, 47),
-  onSurface: Color(0xFF191C1E),
+  onSurface: Color.fromARGB(255, 235, 235, 235),
   surfaceVariant: Color.fromARGB(255, 60, 62, 64),
   onSurfaceVariant: Color(0xFF41484D),
   outline: Color(0xFF71787D),

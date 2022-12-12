@@ -4,13 +4,14 @@ List obstructZonesNames = [];
 
 Future<void> _dialogBuilder(
     context, editData, formKey, type, updateItemDb, state) {
+  double wsize = MediaQuery.of(context).size.width;
   String title = 'Редактирование';
   switch (type) {
     case 0:
       title = 'Изменение имени';
       break;
     case 1:
-      title = 'Изменение IP-адреса';
+      title = wsize > 800 ? 'Изменение IP-адреса' : 'Изменение IP';
       break;
     case 2:
       title = 'Изменение UnitID';
@@ -35,122 +36,130 @@ Future<void> _dialogBuilder(
               CupertinoIcons.text_cursor),
           Text('   $title')
         ]),
-        content: SizedBox(
-            width: 350,
-            child: Form(
-                key: formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 16),
-                      child: type == 0
-                          // ==================== EDIT NAME ====================
-                          ? TextFormField(
-                              autovalidateMode:
-                                  AutovalidateMode.onUserInteraction,
-                              decoration: const InputDecoration(
-                                border: UnderlineInputBorder(),
-                                labelText: 'Имя устройства',
-                              ),
-                              onChanged: (value) => newDevice = Device(
-                                  editData.index,
-                                  editData.ip,
-                                  editData.mac,
-                                  editData.id,
-                                  value,
-                                  editData.lines,
-                                  editData.sensors,
-                                  editData.zones),
-                              initialValue: editData.name,
-                              validator: (String? value) {
-                                return (value != null && value.length < 22)
-                                    ? null
-                                    : 'Максимальная длина имени - 22 символа';
-                              },
-                            )
-                          // ---------------------------------------------------
-                          : type == 1
-                              // ================= EDIT IP =====================
+        content: SingleChildScrollView(
+            child: SizedBox(
+                width: 350,
+                child: Form(
+                    key: formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 16),
+                          child: type == 0
+                              // ==================== EDIT NAME ====================
                               ? TextFormField(
                                   autovalidateMode:
                                       AutovalidateMode.onUserInteraction,
                                   decoration: const InputDecoration(
                                     border: UnderlineInputBorder(),
-                                    labelText: 'IP-адрес устройства',
+                                    labelText: 'Имя устройства',
                                   ),
                                   onChanged: (value) => newDevice = Device(
                                       editData.index,
-                                      value,
+                                      editData.ip,
                                       editData.mac,
                                       editData.id,
-                                      editData.name,
+                                      value,
                                       editData.lines,
                                       editData.sensors,
-                                      editData.zones),
-                                  initialValue: editData.ip,
+                                      editData.zones,
+                                      editData.counters,
+                                      editData.cswitch),
+                                  initialValue: editData.name,
                                   validator: (String? value) {
-                                    return (value != null &&
-                                            RegExp(r'^((25[0-5]|(2[0-4]|1[0-9]|[1-9]|)[0-9])(\.(?!$)|$)){4}$')
-                                                .hasMatch(value))
+                                    return (value != null && value.length < 22)
                                         ? null
-                                        : 'Поле должно быть IP-адресом!';
+                                        : 'Максимальная длина имени - 22 символа';
                                   },
                                 )
-                              // -----------------------------------------------
-                              : type == 2
-                                  // ================ EDIT ID ==================
+                              // ---------------------------------------------------
+                              : type == 1
+                                  // ================= EDIT IP =====================
                                   ? TextFormField(
-                                      inputFormatters: [
-                                        FilteringTextInputFormatter.digitsOnly
-                                      ],
-                                      keyboardType: TextInputType.number,
                                       autovalidateMode:
                                           AutovalidateMode.onUserInteraction,
                                       decoration: const InputDecoration(
                                         border: UnderlineInputBorder(),
-                                        labelText:
-                                            'UnitID устройства (по умолчанию 240)',
+                                        labelText: 'IP-адрес устройства',
                                       ),
-                                      onChanged: (value) => {
-                                        newDevice = Device(
-                                            editData.index,
-                                            editData.ip,
-                                            editData.mac,
-                                            value == ''
-                                                ? 240
-                                                : int.parse(value),
-                                            editData.name,
-                                            editData.lines,
-                                            editData.sensors,
-                                            editData.zones),
-                                        tempuid = value,
-                                      },
-                                      initialValue: editData.id.toString(),
+                                      onChanged: (value) => newDevice = Device(
+                                          editData.index,
+                                          value,
+                                          editData.mac,
+                                          editData.id,
+                                          editData.name,
+                                          editData.lines,
+                                          editData.sensors,
+                                          editData.zones,
+                                          editData.counters,
+                                          editData.cswitch),
+                                      initialValue: editData.ip,
                                       validator: (String? value) {
                                         return (value != null &&
-                                                validUID(value))
+                                                RegExp(r'^((25[0-5]|(2[0-4]|1[0-9]|[1-9]|)[0-9])(\.(?!$)|$)){4}$')
+                                                    .hasMatch(value))
                                             ? null
-                                            : 'Допустимый диапазон значений 0 - 247 ';
+                                            : 'Поле должно быть IP-адресом!';
                                       },
                                     )
-                                  // -------------------------------------------
-                                  : type == 4
-                                      // ============== EDIT ZONES =============
-                                      ? Column(
-                                          children: [
-                                            editZoneName(editData, 0),
-                                            editZoneName(editData, 1),
+                                  // -----------------------------------------------
+                                  : type == 2
+                                      // ================ EDIT ID ==================
+                                      ? TextFormField(
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter
+                                                .digitsOnly
                                           ],
+                                          keyboardType: TextInputType.number,
+                                          autovalidateMode: AutovalidateMode
+                                              .onUserInteraction,
+                                          decoration: const InputDecoration(
+                                            border: UnderlineInputBorder(),
+                                            labelText:
+                                                'UnitID устройства (по умолчанию 240)',
+                                          ),
+                                          onChanged: (value) => {
+                                            newDevice = Device(
+                                                editData.index,
+                                                editData.ip,
+                                                editData.mac,
+                                                value == ''
+                                                    ? 240
+                                                    : int.parse(value),
+                                                editData.name,
+                                                editData.lines,
+                                                editData.sensors,
+                                                editData.zones,
+                                                editData.counters,
+                                                editData.cswitch),
+                                            tempuid = value,
+                                          },
+                                          initialValue: editData.id.toString(),
+                                          validator: (String? value) {
+                                            return (value != null &&
+                                                    validUID(value))
+                                                ? null
+                                                : 'Допустимый диапазон значений 0 - 247 ';
+                                          },
                                         )
-                                      : null,
-                      // -------------------------------------------------------
-                    ),
-                  ],
-                ))),
+                                      // -------------------------------------------
+                                      : type == 4
+                                          // ============== EDIT ZONES =============
+                                          ? Column(
+                                              children: [
+                                                editZoneName(editData, 0),
+                                                editZoneName(editData, 1),
+                                              ],
+                                            )
+                                          : null,
+                          // -------------------------------------------------------
+                        ),
+                      ],
+                    )))),
         actions: <Widget>[
           type == 2 && state
               ? TextButton(

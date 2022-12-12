@@ -1,7 +1,7 @@
 part of '../../device.dart';
 
-Column settingsMain(
-    context, itemDb, oneDeviceStates, formKey, updateOneDeviceStates) {
+Column settingsMain(context, itemDb, oneDeviceStates, formKey,
+    updateOneDeviceStates, periodicUpdate) {
   String reg0 = oneDeviceStates[0].value;
   bool blocked = reg0.substring(19, 20) == '1';
   bool multiMegaZona = reg0.substring(21, 22) == '1';
@@ -18,6 +18,27 @@ Column settingsMain(
       );
       SystemSound.play(SystemSoundType.alert);
     }
+  }
+
+  List<String> txts = [];
+  if (MediaQuery.of(context).size.width > 800) {
+    txts = [
+      '   Разделение состояний и управления на две независимые зоны',
+      '   Отключение реагирования на нажатия физических кнопок',
+      '  Закрывать краны при потере радиодатчика',
+      '   Краны будут закрыты, если один из беспроводных датчиков не вышел на связь',
+      '  Включить режим добавления радиодатчиков',
+      '   Время работы режима - 1 мин., список датчиков и состояние переключателя обновляются\n   с интервалом 5 сек автоматически, только при включенном режиме'
+    ];
+  } else {
+    txts = [
+      '   Разделение на две независимые зоны',
+      '   Отключение физических кнопок',
+      '  Закрывать краны\n  при потере радиодатчика',
+      '   Краны будут закрыты,\n   если радиодатчик потерян',
+      '  Включить режим\n  добавления радиодатчиков',
+      '   Время работы режима - 1 минута'
+    ];
   }
 
   return Column(
@@ -42,9 +63,7 @@ Column settingsMain(
                         Text(
                             style: subTitleStyle(context),
                             '  Многозонный режим'),
-                        Text(
-                            style: descStyle(context),
-                            '   Разделение состояний и управления на две независимые зоны')
+                        Text(style: descStyle(context), txts[0])
                       ]),
                 ])
               ],
@@ -79,9 +98,7 @@ Column settingsMain(
                         Text(
                             style: subTitleStyle(context),
                             '  Блокировка кнопок'),
-                        Text(
-                            style: descStyle(context),
-                            '   Отключение реагирования на нажатия физических кнопок')
+                        Text(style: descStyle(context), txts[1])
                       ])
                 ])
               ],
@@ -113,12 +130,8 @@ Column settingsMain(
                   Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                            style: subTitleStyle(context),
-                            '  Закрывать краны при потере радиодатчика'),
-                        Text(
-                            style: descStyle(context),
-                            '   Краны будут закрыты, если один из беспроводных датчиков не вышел на связь')
+                        Text(style: subTitleStyle(context), txts[2]),
+                        Text(style: descStyle(context), txts[3])
                       ])
                 ])
               ],
@@ -150,12 +163,8 @@ Column settingsMain(
                   Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                            style: subTitleStyle(context),
-                            '  Включить режим добавления радиодатчиков'),
-                        Text(
-                            style: descStyle(context),
-                            '   Время работы режима - минута,\n   состояние переключателя режима не обновляется автоматически')
+                        Text(style: subTitleStyle(context), txts[4]),
+                        Text(style: descStyle(context), txts[5])
                       ])
                 ])
               ],
@@ -169,6 +178,7 @@ Column settingsMain(
                 var res = await sendOneRegister(
                     reg0, 24, addNewRadio ? '0' : '1', 1, 0, itemDb);
                 updateNewRegister(0, res);
+                periodicUpdate(value);
               },
             ),
           ],

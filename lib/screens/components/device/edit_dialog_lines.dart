@@ -4,11 +4,10 @@ List obstructLinesNames = [];
 
 Future<void> _dialogBuilderLines(context, editData, formKey, updateItemDb,
     oneDeviceStates, updateNewRegister) {
-  String title = 'Конфигурация проводных линий';
+  double wsize = MediaQuery.of(context).size.width;
+  String title =
+      wsize > 800 ? 'Конфигурация проводных линий' : 'Конфигурация линий';
 
-  // String reg0 = oneDeviceStates[0].value;
-  // bool multiMegaZona = reg0.substring(21, 22) == '1';
-  // ignore: no_leading_underscores_for_local_identifiers
   StateSetter _setState;
   return showDialog<void>(
     context: context,
@@ -22,7 +21,7 @@ Future<void> _dialogBuilderLines(context, editData, formKey, updateItemDb,
               CupertinoIcons.bars),
           Text('   $title')
         ]),
-        content: StatefulBuilder(// You need this, notice the parameters below:
+        content: SingleChildScrollView(child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
           _setState = setState;
 
@@ -52,23 +51,21 @@ Future<void> _dialogBuilderLines(context, editData, formKey, updateItemDb,
             });
           }
 
-          return SizedBox(
-              width: 700,
-              child: Form(
-                  key: formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: <Widget>[
-                      Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 16),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+          return SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              child: SizedBox(
+                  width: wsize > 800 ? 648 : wsize,
+                  child: Form(
+                      key: formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 16),
+                              child: Wrap(
                                 children: [
                                   linesBox(
                                       Column(children: [
@@ -118,12 +115,6 @@ Future<void> _dialogBuilderLines(context, editData, formKey, updateItemDb,
                                             stateReg)
                                       ]),
                                       context),
-                                ],
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
                                   linesBox(
                                       Column(children: [
                                         editLineName(editData, 2),
@@ -173,14 +164,12 @@ Future<void> _dialogBuilderLines(context, editData, formKey, updateItemDb,
                                       ]),
                                       context),
                                 ],
+                              )
+                              // -----------------------------------------------------
                               ),
-                            ],
-                          )
-                          // -----------------------------------------------------
-                          ),
-                    ],
-                  )));
-        }),
+                        ],
+                      ))));
+        })),
         actions: <Widget>[
           TextButton(
             style: TextButton.styleFrom(

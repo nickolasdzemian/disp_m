@@ -49,7 +49,7 @@ Container editOrder(context, reorder, invertOrder) {
 }
 
 Container editFliter(context, reorder, filterValue, filterType) {
-  List<String> list = <String>['-1', '10', '0', '1', '2', '3', '4'];
+  List<String> list = <String>['-1', '10', '0', '1', '2', '3', '4', '5', '6'];
   String parceToTxt(v) {
     String res = 'Ошибка';
     switch (v) {
@@ -73,6 +73,12 @@ Container editFliter(context, reorder, filterValue, filterType) {
         break;
       case '4':
         res = 'Системные  ';
+        break;
+      case '5':
+        res = 'Счётчики  ';
+        break;
+      case '6':
+        res = 'Превышение  ';
         break;
     }
     return res;
@@ -115,7 +121,6 @@ Container clearButton(context, updateState) {
     height: 33,
     width: 140,
     margin: const EdgeInsets.only(top: 2.5, bottom: 2.5, left: 5, right: 5),
-    padding: const EdgeInsets.all(5),
     decoration: BoxDecoration(
       color: Theme.of(context).colorScheme.background,
       borderRadius: const BorderRadius.all(Radius.circular(50)),
@@ -134,7 +139,6 @@ Container exportButton(context, allevents) {
     height: 33,
     width: 140,
     margin: const EdgeInsets.only(top: 2.5, bottom: 2.5, left: 5, right: 5),
-    padding: const EdgeInsets.all(5),
     decoration: BoxDecoration(
       color: Theme.of(context).colorScheme.background,
       borderRadius: const BorderRadius.all(Radius.circular(50)),

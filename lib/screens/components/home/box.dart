@@ -23,8 +23,8 @@ Container deviceItemBoxView(context, item, child) {
           : 20;
   return Container(
       key: UniqueKey(),
-      height: 200,
-      width: 300,
+      height: 265,
+      width: 360,
       margin: const EdgeInsets.only(top: 25, left: 17.5, right: 17.5),
       padding: EdgeInsets.only(
           left: paddingStep, top: paddingStep, right: 3, bottom: paddingStep),

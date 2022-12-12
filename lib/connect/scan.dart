@@ -1,8 +1,10 @@
-// import 'dart:developer';
+import 'dart:developer';
 import 'dart:io';
 import 'package:process_run/shell_run.dart';
-import 'package:modbus/modbus.dart' as modbus;
+import 'package:neptun_m/lib/modbus/modbus.dart' as modbus;
 import 'package:neptun_m/db/db.dart';
+
+import 'package:flutter/services.dart';
 
 var controller = ShellLinesController();
 var shell = Shell(stdout: controller.sink, verbose: false, throwOnError: false);
@@ -24,13 +26,18 @@ class Scan {
   /// If passed not empty [ex], it will return new ips for only existing devices
   /// - ex = List of alredy added mac-addresses/devices
   static getAllAddresses(List ex) async {
-    // var result = await Process.run('arp', ['-a']);
-    dynamic result = await shell.run('arp -a');
+    dynamic result = '';
+    String out = '';
+    if (Platform.isAndroid) {
+      const platform = MethodChannel('com.example.neptun_m/common');
+      result = await platform.invokeMethod('getArpTable');
+      out = result.toString();
+      inspect(result);
+    } else {
+      result = await shell.run('arp -a');
+      out = result[0].stdout.toString();
+    }
 
-    // result = result.toString();
-    // List output = result.stdout.split('\n');
-    // List output = result.split('\n');
-    String out = result[0].stdout.toString();
     List output = out.split('\n');
 
     List allIPs = [];

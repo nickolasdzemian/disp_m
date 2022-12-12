@@ -1,11 +1,16 @@
 part of '../../device.dart';
 
-AppBar deviceAppBar(context) {
+AppBar deviceAppBar(context, timer) {
+  bool wsize = MediaQuery.of(context).size.width > 800;
   return AppBar(
+    toolbarHeight: !wsize ? 50 : null,
     leading: IconButton(
       icon:
           Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.primary),
-      onPressed: () => Navigator.of(context).pop(),
+      onPressed: () {
+        timer?.cancel();
+        Navigator.of(context).pop();
+      },
     ),
     title: Row(
         mainAxisAlignment: MainAxisAlignment.center,

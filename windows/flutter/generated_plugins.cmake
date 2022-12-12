@@ -4,9 +4,14 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   audioplayers_windows
+  flutter_platform_alert
   local_notifier
+  permission_handler_windows
+  screen_retriever
+  sentry_flutter
+  share_plus
   url_launcher_windows
-  window_size
+  window_manager
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

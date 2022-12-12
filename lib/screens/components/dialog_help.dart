@@ -5,7 +5,7 @@ Future<void> _dialogHelp(context, title, help) {
     context: context,
     builder: (BuildContext contextHelper) {
       return AlertDialog(
-        alignment: Alignment.topLeft,
+        alignment: Alignment.topCenter,
         title: Row(children: [
           Icon(
               color: Theme.of(context).colorScheme.secondary,

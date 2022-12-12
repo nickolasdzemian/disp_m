@@ -14,7 +14,10 @@ class DeviceAdapter extends TypeAdapter<Device> {
     final lines = reader.read();
     final sensors = reader.read();
     final zones = reader.read();
-    return Device(index, ip, mac, id, name, lines, sensors, zones);
+    final counters = reader.read();
+    final cswitch = reader.read();
+    return Device(
+        index, ip, mac, id, name, lines, sensors, zones, counters, cswitch);
   }
 
   @override
@@ -27,76 +30,14 @@ class DeviceAdapter extends TypeAdapter<Device> {
     writer.write(obj.lines);
     writer.write(obj.sensors);
     writer.write(obj.zones);
-  }
-}
-
-class SettingIntAdapter extends TypeAdapter<SettingInt> {
-  @override
-  final typeId = 11;
-
-  @override
-  SettingInt read(BinaryReader reader) {
-    final value = reader.read();
-    return SettingInt(value);
-  }
-
-  @override
-  void write(BinaryWriter writer, SettingInt obj) {
-    writer.write(obj.value);
-  }
-}
-
-class SettingBoolAdapter extends TypeAdapter<SettingBool> {
-  @override
-  final typeId = 12;
-
-  @override
-  SettingBool read(BinaryReader reader) {
-    final value = reader.read();
-    return SettingBool(value);
-  }
-
-  @override
-  void write(BinaryWriter writer, SettingBool obj) {
-    writer.write(obj.value);
-  }
-}
-
-class SettingStringAdapter extends TypeAdapter<SettingString> {
-  @override
-  final typeId = 13;
-
-  @override
-  SettingString read(BinaryReader reader) {
-    final value = reader.read();
-    return SettingString(value);
-  }
-
-  @override
-  void write(BinaryWriter writer, SettingString obj) {
-    writer.write(obj.value);
-  }
-}
-
-class SettingListAdapter extends TypeAdapter<SettingList> {
-  @override
-  final typeId = 14;
-
-  @override
-  SettingList read(BinaryReader reader) {
-    final value = reader.read();
-    return SettingList(value);
-  }
-
-  @override
-  void write(BinaryWriter writer, SettingList obj) {
-    writer.write(obj.value);
+    writer.write(obj.counters);
+    writer.write(obj.cswitch);
   }
 }
 
 class EventListAdapter extends TypeAdapter<EventItem> {
   @override
-  final typeId = 2;
+  final typeId = 1;
 
   @override
   EventItem read(BinaryReader reader) {
@@ -118,5 +59,51 @@ class EventListAdapter extends TypeAdapter<EventItem> {
     writer.write(obj.evName);
     writer.write(obj.deviceName);
     writer.write(obj.info);
+  }
+}
+
+class CStatsAdapter extends TypeAdapter<CounterSItem> {
+  @override
+  final typeId = 2;
+
+  @override
+  CounterSItem read(BinaryReader reader) {
+    final DateTime date = reader.read();
+    final double value = reader.read();
+    return CounterSItem(date: date, value: value);
+  }
+
+  @override
+  void write(BinaryWriter writer, CounterSItem obj) {
+    writer.write(obj.date);
+    writer.write(obj.value);
+  }
+}
+
+class PlanAdapter extends TypeAdapter<PlanItem> {
+  @override
+  final typeId = 3;
+
+  @override
+  PlanItem read(BinaryReader reader) {
+    final index = reader.read();
+    final type = reader.read();
+    final date = reader.read();
+    final desc = reader.read();
+    final state = reader.read();
+    final todo = reader.read();
+    final resact = reader.read();
+    return PlanItem(index, type, date, desc, state, todo, resact);
+  }
+
+  @override
+  void write(BinaryWriter writer, PlanItem obj) {
+    writer.write(obj.index);
+    writer.write(obj.type);
+    writer.write(obj.date);
+    writer.write(obj.desc);
+    writer.write(obj.state);
+    writer.write(obj.todo);
+    writer.write(obj.resact);
   }
 }

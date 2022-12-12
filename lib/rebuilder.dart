@@ -5,6 +5,8 @@ import 'package:neptun_m/screens/assets.dart';
 import 'package:flutter_shake_animated/flutter_shake_animated.dart';
 import 'package:neptun_m/db/db.dart';
 import './screens/theme/theme.dart';
+import 'package:neptun_m/che_guevara.dart';
+import 'package:neptun_m/api/route.dart';
 
 typedef ErrorBuilder = Widget Function(BuildContext context, Object error);
 
@@ -63,6 +65,9 @@ class RebuilderState extends State<Rebuilder> {
       'Перезапуск состояния системы',
       'Запрошен перезапуск дерева состояний приложения',
     ]);
+    equalal0 = [];
+    equalal1 = [];
+    killServe();
     setState(() => _child = widget.waiting(context));
     _futureBuilder(context);
   }

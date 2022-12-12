@@ -3,11 +3,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:neptun_m/db/db.dart';
 
 import 'dart:io';
+// ignore: depend_on_referenced_packages
 import 'package:path/path.dart';
 import 'package:flutter_excel/excel.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
+// ignore: depend_on_referenced_packages
 import 'package:syncfusion_flutter_core/theme.dart';
+import 'package:share_plus/share_plus.dart';
 
 part 'components/styles/history.dart';
 part 'components/history/his_bar.dart';
@@ -97,7 +100,21 @@ class HistoryWidgetState extends State<HistoryScreen> {
 
   void updateRange(sd, ed) {
     var evs = [...events.values.toList()];
-    var filteredEvents = evs
+    List<EventItem> filteredEvents = [];
+    if (filterValue < 0) {
+      filteredEvents = evs.where((e) => e.evType < 3).toList();
+    } else if (filterValue > 9) {
+      filteredEvents = evs.where((e) => e.evType < filterValue).toList();
+    } else {
+      filteredEvents = evs.where((e) => e.evType == filterValue).toList();
+    }
+    if (reorder) {
+      filteredEvents.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    } else {
+      filteredEvents
+          .sort((a, b) => b.timestamp.compareTo(a.timestamp)); // new top
+    }
+    filteredEvents = filteredEvents
         .where((e) => (e.timestamp.isAfter(sd) && e.timestamp.isBefore(ed)))
         .toList();
     setState(() {
@@ -107,19 +124,33 @@ class HistoryWidgetState extends State<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    bool wsize = MediaQuery.of(context).size.width > 800;
     return Scaffold(
         appBar: historyAppBar(context, reorder, filterValue, invertOrder,
             filterType, updateState, allevents),
         body: allevents.isNotEmpty
             ? ListView.builder(
                 primary: false,
-                padding: const EdgeInsets.only(left: 25, right: 25),
+                padding: EdgeInsets.only(
+                    left: wsize ? 25 : 5, right: 5, bottom: 100),
                 scrollDirection: Axis.vertical,
                 shrinkWrap: true,
                 itemCount: allevents.length,
-                itemExtent: 66,
+                itemExtent: 80,
                 itemBuilder: (context, index) {
                   final item = allevents[index];
+                  String title = '${item.deviceName}: ${item.evName}';
+                  title = title.length > 60 && wsize
+                      ? '${title.substring(0, 60)}...'
+                      : title.length > 12 && !wsize
+                          ? '${title.substring(0, 12)}...'
+                          : title;
+                  String info = item.info;
+                  info = info.length > 150 && wsize
+                      ? '${info.substring(0, 150)}...'
+                      : info.length > 70 && !wsize
+                          ? '${info.substring(0, 70)}...'
+                          : info;
 
                   return ListTile(
                     minVerticalPadding: 5,
@@ -130,11 +161,11 @@ class HistoryWidgetState extends State<HistoryScreen> {
                             CupertinoIcons.drop_fill)
                         : item.evType == 1
                             ? const Icon(
-                                color: Colors.yellow,
+                                color: Colors.orange,
                                 CupertinoIcons.antenna_radiowaves_left_right)
                             : item.evType == 2
                                 ? const Icon(
-                                    color: Colors.yellow,
+                                    color: Colors.orange,
                                     CupertinoIcons.battery_empty)
                                 : item.evType == 3
                                     ? Icon(
@@ -149,17 +180,28 @@ class HistoryWidgetState extends State<HistoryScreen> {
                                                 .primary,
                                             CupertinoIcons
                                                 .chevron_left_slash_chevron_right)
-                                        : Icon(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .primary,
-                                            CupertinoIcons
-                                                .exclamationmark_triangle_fill),
-                    title: Row(children: [
-                      Text(
-                          '${item.formatedStamp}   ${item.deviceName}: ${item.evName}')
-                    ]),
-                    subtitle: Text(item.info),
+                                        : item.evType == 5
+                                            ? Icon(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary,
+                                                CupertinoIcons.gauge)
+                                            : item.evType == 6
+                                                ? Icon(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .primary,
+                                                    CupertinoIcons
+                                                        .drop_triangle)
+                                                : Icon(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .primary,
+                                                    CupertinoIcons
+                                                        .exclamationmark_triangle_fill),
+                    title:
+                        Row(children: [Text('${item.formatedStamp}   $title')]),
+                    subtitle: Text(info),
                   );
                 },
               )
@@ -171,7 +213,7 @@ class HistoryWidgetState extends State<HistoryScreen> {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                             color: Theme.of(context).colorScheme.secondary),
-                        'Журнал событий пуст',
+                        'Журнал событий пуст или\nнет данных по выбранным фильтрам',
                       ),
                     ]),
               ),

@@ -1,4 +1,6 @@
-import 'dart:developer';
+// ignore_for_file: depend_on_referenced_packages
+
+// import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:neptun_m/connect/scan.dart';
@@ -10,12 +12,14 @@ import 'package:neptun_m/info/help.dart';
 import 'package:neptun_m/screens/assets.dart';
 import 'package:neptun_m/lib/remote_config.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:neptun_m/rebuilder.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:neptun_m/api/route.dart';
 
 import 'package:flutter/services.dart';
 import 'dart:io';
-// import 'package:just_audio/just_audio.dart';
 import 'package:audio_in_app/audio_in_app.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 part 'components/settings/appbar.dart';
 part 'components/dialog_help.dart';
@@ -26,6 +30,8 @@ part 'components/settings/auto_interval.dart';
 part 'components/settings/box_wide.dart';
 part 'components/settings/other.dart';
 part 'components/settings/dialog_about.dart';
+part 'components/settings/navi_out.dart';
+part 'components/settings/serve_dialog.dart';
 part 'components/styles/settings.dart';
 
 class AppSettingsPage extends StatefulWidget {
@@ -74,24 +80,68 @@ class _Settings extends State<AppSettingsPage> {
 
   void addDevices() async {
     if (!_adding) {
-      setState(() {
-        _adding = true;
-      });
+      changeAdding();
       stopTimer();
       await Scan.getAllDevices([], setCount);
-      if (mounted) {
-        setState(() {
-          _adding = false;
-        });
+      changeAdding();
+    }
+  }
+
+  void changeAdding() {
+    if (mounted) {
+      setState(() {
+        _adding = !_adding;
+      });
+    }
+  }
+
+  Future<void> addSomeNewManually(formKey, context, close) async {
+    if (!_adding) {
+      close();
+      changeAdding();
+      int id00 = id0 == '' ? 240 : int.parse(id0);
+      bool scanBoolResult = await Scan.checkerOneOf(Scan(ip0, mac0, id00));
+      try {
+        if (scanBoolResult) {
+          // if (formKey.currentState!.validate()) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                backgroundColor: CupertinoColors.systemGreen.withOpacity(0.6),
+                content: const Text('Успешно добавлено')),
+          );
+          stopTimer();
+          newDevice0.add(Scan(ip0, mac0, id00));
+          await writeDevice0(newDevice0, setCount);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                backgroundColor: Theme.of(context).colorScheme.error,
+                content: const Text(
+                    'Проверка устройства не пройдена, устройство не добавлено')),
+          );
+        }
+      } catch (err) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              content: Text(
+                  'Проверка устройства не пройдена, устройство не добавлено\n${err.toString()}')),
+        );
+      } finally {
+        SystemSound.play(SystemSoundType.alert);
+        newDevice0 = [];
+        changeAdding();
       }
     }
   }
 
   void addDevice() async {
-    _dialogBuilder(context, all, formKey, setCount, stopTimer);
+    _dialogBuilder(context, all, formKey, setCount, stopTimer, _adding,
+        addSomeNewManually);
   }
 
   setInterval(a) async {
+    stopTimer();
     switch (a) {
       case 'min':
         if (interval > 1 && interval <= 300) {
@@ -163,6 +213,13 @@ class _Settings extends State<AppSettingsPage> {
         k = 'notifications';
         v = notifications;
         break;
+      case 'notifications4':
+        setState(() {
+          notifications[4] = v;
+        });
+        k = 'notifications';
+        v = notifications;
+        break;
       case 'reserved':
         setState(() {
           reserved = v;
@@ -222,9 +279,10 @@ class _Settings extends State<AppSettingsPage> {
           return previousState != state;
         },
         builder: (context, devicesStatesNew) => Scaffold(
-              appBar: settingsAppBar(context, themeMode, changeTheme, update,
-                  appName, packageName, version, buildNumber, newVersion),
-              body: Center(
+            appBar: settingsAppBar(context, themeMode, changeTheme, update,
+                appName, packageName, version, buildNumber, newVersion),
+            body: SingleChildScrollView(
+              child: Center(
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -247,35 +305,25 @@ class _Settings extends State<AppSettingsPage> {
                                   setInterval, _adding, state, scanMode)),
                         ],
                       ),
-                      settingsBoxWide(
-                          context,
-                          settingsOther(context, autoScan, server, serverPort,
-                              notifications, reserved, updates, state)),
+                      settingsNaviWide(context, '/progbase'),
+                      SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: settingsBoxWide(
+                              context,
+                              settingsOther(
+                                  context,
+                                  autoScan,
+                                  server,
+                                  serverPort,
+                                  notifications,
+                                  reserved,
+                                  updates,
+                                  state))),
+                      const SizedBox(
+                        height: 35,
+                      )
                     ]),
               ),
-              floatingActionButton: FloatingActionButton(
-                heroTag: "btn3",
-                onPressed: (() {
-                  run = false;
-                  stopTimer();
-                  Rebuilder.of(context)?.rebuild();
-                  // int delay = interval + allDevicesDb().length;
-                  // ScaffoldMessenger.of(context).showSnackBar(
-                  //   SnackBar(
-                  //       duration: Duration(seconds: delay),
-                  //       backgroundColor: Theme.of(context).colorScheme.primary,
-                  //       content: Text(
-                  //           'Ожидайте, Перезапуск будет совершен через $delay сек')),
-                  // );
-                  // Future.delayed(Duration(seconds: delay), () {
-                  //   Rebuilder.of(context)?.rebuild();
-                  // });
-                }),
-                tooltip: 'Перезапустить опрос устройств и\nоболочку приложения',
-                child: Icon(
-                    color: Theme.of(context).colorScheme.error,
-                    CupertinoIcons.restart),
-              ),
-            ));
+            )));
   }
 }

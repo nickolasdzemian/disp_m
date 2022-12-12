@@ -1,15 +1,27 @@
+// ignore_for_file: unnecessary_string_escapes
+
 import 'dart:async';
-import 'package:modbus/modbus.dart' as modbus;
+import 'package:neptun_m/lib/modbus/modbus.dart' as modbus;
 import 'package:neptun_m/db/db.dart';
 import 'package:neptun_m/connect/scan.dart';
 import 'package:neptun_m/lib/models.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 // .............................................................................
 import 'dart:io';
-import 'package:window_size/window_size.dart';
+import 'package:window_manager/window_manager.dart';
 import 'package:flutter/services.dart';
+import 'package:restart_app/restart_app.dart';
 // .............................................................................
 import 'package:neptun_m/lib/err_push.dart';
+// .............................................................................
+import 'package:neptun_m/lib/cstats.dart';
+import 'package:neptun_m/lib/plan.dart';
+import 'package:neptun_m/api/route.dart';
+
+part './helpers.dart';
+part './grnd_alarm.dart';
+
+int thisIDX = 666;
 
 Timer? _timer;
 // int _timerHash = 0;
@@ -20,78 +32,73 @@ bool run = false;
 bool runner = false;
 bool errr = false;
 
-num registers = 106 + 1; // Max 0x130; this MVP 0x106
+// num registers = 106 + 1; // Max 0x130; this MVP 0x106
 List registersStates = [];
 List sensorsNames = [];
-List devicesStates = [];
-List devicesStatesNew = [];
+List<DeviceState> devicesStates = [];
+List<DeviceState> devicesStatesNew = [];
 List deviceParams = [];
 List deviceParamsNew = [];
 List deviceParamsTemp = [];
+List deviceCountersStates = [];
+List deviceCountersParams = [];
+List deviceOneState = [];
+List deviceOneParams = [];
+List deviceOneCountersStates = [];
+List deviceOneCountersParams = [];
 
 int lostCounter = 0;
 List lost = [];
 String statusDispTop = '';
 
-/// Stops request periodic timer
-/// - global function for resetting without BLOC provider
-void globalStopTimer() {
-  run = false;
-  statusDispTop = '- ОСТАНОВЛЕНА';
-  setWindowTitleState();
-  _timer?.cancel();
-  registersStates = [];
-  devicesStates = [];
-  devicesStatesNew = [];
-  deviceParamsTemp = [];
-  SystemSound.play(SystemSoundType.alert);
-  DataBase.updateEventList([
-    4,
-    'Опрос остановлен',
-    'Выполнена остановка периодического опроса устройств. Обновление состояния не производится',
-  ]);
-}
-
-void setWindowTitleState() {
-  // .........................................................................
-  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-    setWindowTitle('Система диспетчеризации Neptun Smart $statusDispTop');
-  }
-  // .........................................................................
-}
-
 /// Get and parce specified register to string representation of 32-bit bin
-Future<dynamic> read(client, num register) async {
-  var response = await client.readHoldingRegisters(0, registers);
+Future<dynamic> read(client, int register, int length) async {
+  var response = await client.readHoldingRegisters(register, length);
   return response;
-  // ---------------------------------------------------------------------------
-  //                      OLD PARTIAL REQUEST METHOD
-  // ---------------------------------------------------------------------------
-  // var response = await client.readHoldingRegisters(register, 1);
-  // if (response.isNotEmpty) {
-  //   var state = response[0].toRadixString(2);
-  //   if (state.length < 32) {
-  //     num fixed = 32 - state.length;
-  //     for (int j = 0; j < fixed; j++) {
-  //       state = noll + state;
-  //     }
-  //   }
-  //   if (register == 6) {
-  //     print('REG $register: ${response[0]}');
-  //     return response[0];
-  //   } else {
-  //     print('REG $register: $state');
-  //     return state;
-  //   }
-  // } else {
-  //   return null;
-  // }
-  // ---------------------------------------------------------------------------
 }
 
 /// #### Requests all devices states and update states via Provider
 class StatesModel extends Cubit<List> {
   StatesModel() : super([]);
+
+  // ***************************************************************************
+  //          Implementation of background native service for Android
+  // ***************************************************************************
+
+  // final platform = const MethodChannel('com.example.neptun_m/common');
+  // platform.setMethodCallHandler((call) => methodHandler(call));
+  // Future<void> methodHandler(MethodCall call) async {
+  //   switch (call.method) {
+  //     case "zaloop":
+  //       print('ДА ПРЕИСПОЛНИТСЯ ПИЗДА СПЕРМОЮ');
+  //       slave();
+  //       break;
+  //   }
+  // }
+
+  /// Worker for background request on Android
+  Future<void> slave() async {
+    run = true;
+    runner = true;
+    await getState();
+    devicesStatesNew = devicesStates;
+    devicesStates = [];
+    if (devicesStatesNew.isNotEmpty && devicesStatesNew.length == all.length) {
+      devicesStatesNew.sort((a, b) => a.index.compareTo(b.index));
+      try {
+        await checkAlarms(devicesStatesNew);
+      } catch (e) {
+        DataBase.updateEventList([
+          4,
+          'Возникла ошибка, выполнен перезапуск',
+          e.toString(),
+        ]);
+      }
+      devicesStatesNew = [];
+    }
+    runner = false;
+  }
+  // ---------------------------------------------------------------------------
 
   var all = allDevicesDb();
   var set = allSettingsDb();
@@ -156,17 +163,18 @@ class StatesModel extends Cubit<List> {
         devicesStatesNew.sort((a, b) => a.index.compareTo(b.index));
         try {
           emit(devicesStatesNew);
+          serveStates = devicesStatesNew;
         } catch (e) {
           stopTimer();
           run = false;
           statusDispTop = '- ОШИБКА';
           setWindowTitleState();
           errr = true;
-          showErrPush(
-              'Возникла непредвиденная ошибка! Требуется перезапуск!\n${e.toString()}');
+          // showErrPush(
+          //     'Возникла непредвиденная ошибка! Требуется перезапуск!\n${e.toString()}');
           DataBase.updateEventList([
             4,
-            'Возникла непредвиденная ошибка, требуется перезапуск',
+            'Возникла ошибка, выполнен перезапуск',
             e.toString(),
           ]);
           // restartTimer();
@@ -184,6 +192,7 @@ class StatesModel extends Cubit<List> {
     // if (_timer != null) {
     //   _timerHash = _timer.hashCode;
     // }
+
     if (mainMode) {
       _timer?.cancel();
       _timer = Timer.periodic(dura, (timer) async {
@@ -247,7 +256,11 @@ class StatesModel extends Cubit<List> {
         // print(i);
         // ---------------------------------------------------------------------
 
+        thisIDX = all[i].index;
         int id = all[i].id;
+        bool scanCParams =
+            all[i].cswitch.where((i) => i == true).toList().length > 0;
+        int cidx = 0;
         var client = modbus.createTcpClient(all[i].ip,
             port: 503,
             mode: modbus.ModbusMode.rtu,
@@ -255,7 +268,7 @@ class StatesModel extends Cubit<List> {
             unitId: id);
         try {
           await client.connect();
-          var response = await read(client, 0);
+          var response = await read(client, 0, 123);
           num sensorsAmount = 0;
           if (response.isNotEmpty) {
             for (num j = 0; j < response.length; j++) {
@@ -266,9 +279,9 @@ class StatesModel extends Cubit<List> {
                   oneRegState = noll + oneRegState;
                 }
               }
-              if (j + 50 - sensorsAmount == registers) {
-                break;
-              }
+              // if (j + 50 - sensorsAmount == registers) {
+              //   break;
+              // }
               if (j == 6) {
                 oneRegState = response.elementAt(j);
                 sensorsAmount = oneRegState;
@@ -277,21 +290,35 @@ class StatesModel extends Cubit<List> {
                 for (int m = 0; m < sensorsAmount; m++) {
                   if (all[i].sensors.length < sensorsAmount) {
                     sensorsNames = all[i].sensors;
-                    sensorsNames.add('Датчик');
+                    sensorsNames.add('Датчик ${m + 1}');
                     await DataBase.updateDevice(Device(
                         all[i].index,
                         all[i].ip,
                         all[i].mac,
                         all[i].id,
-                        all[i].mac,
+                        all[i].name,
                         all[i].lines,
                         sensorsNames,
-                        all[i].zones));
+                        all[i].zones,
+                        all[i].counters,
+                        all[i].cswitch));
                     sensorsNames = [];
                   }
                 }
                 // Skip sensors params
                 j += 50;
+              } else if (j > 106 && j < 123) {
+                deviceCountersStates.add(RegisterState(
+                    j, [response.elementAt(j), response.elementAt(j + 1)]));
+
+                // Write stats if counter is ON in db
+                if (all[i].cswitch[cidx]) {
+                  await writeStats(all[i].mac, cidx,
+                      [response.elementAt(j), response.elementAt(j + 1)]);
+                }
+
+                j++;
+                cidx++;
               } else {
                 registersStates.add(RegisterState(j, oneRegState));
               }
@@ -313,8 +340,28 @@ class StatesModel extends Cubit<List> {
                 deviceParamsTemp.add(RegisterState(j, oneRegState));
               }
             }
+            // Counters params for permanent saving to var
+            if (scanCParams) {
+              var responseCP = await read(client, 123, 8);
+              for (num j = 0; j < responseCP.length; j++) {
+                var oneRegState = responseCP.elementAt(j).toRadixString(2);
+                if (oneRegState.length < 32) {
+                  num fixed = 32 - oneRegState.length;
+                  for (int k = 0; k < fixed; k++) {
+                    oneRegState = noll + oneRegState;
+                  }
+                }
+                deviceCountersParams.add(RegisterState(j + 123, oneRegState));
+              }
+            }
             // inspect(registersStates);
           }
+
+          // Do planned actions
+          if (!await doPlan(client, all[i].mac, registersStates[0])) {
+            await doPlan(client, all[i].mac, registersStates[0]);
+          }
+
           devicesStates.add(DeviceState(
               all[i].index,
               true,
@@ -323,60 +370,18 @@ class StatesModel extends Cubit<List> {
               all[i].sensors,
               all[i].zones,
               registersStates,
-              deviceParamsTemp));
+              deviceParamsTemp,
+              all[i].counters,
+              deviceCountersStates,
+              deviceCountersParams));
           registersStates = [];
           deviceParamsTemp = [];
+          deviceCountersStates = [];
+          deviceCountersParams = [];
           lost.removeWhere((lEl) => lEl.mac == all[i].mac);
-          // -------------------------------------------------------------------
-          //                 OLD PARTIAL REQUEST METHOD
-          // -------------------------------------------------------------------
-          // for (num j = 0; j < registers; j++) {
-          //   if (j == 6) {
-          //     var sensorsAmount = await read(client, j);
-          //     registersStates.add(RegisterState(j, sensorsAmount));
-          //     j = j + 50 + 1; // Skip sensors params  // ???
-          //     // Sensors states
-          //     for (int k = 0; k < sensorsAmount; k++) {
-          //       dynamic value = await read(client, j);
-          //       registersStates.add(RegisterState(j, value));
-          //       if (all[i].sensors.isEmpty) {
-          //         sensorsNames.add('');
-          //       }
-          //       if (all[i].sensors.length < sensorsAmount) {
-          //         sensorsNames = all[i].sensors;
-          //         sensorsNames.add('');
-          //       }
-          //       j++;
-          //     }
-          //     if (sensorsNames.isNotEmpty) {
-          //       await DataBase.updateDevice(Device(
-          //           all[i].index,
-          //           all[i].ip,
-          //           all[i].mac,
-          //           all[i].id,
-          //           all[i].mac,
-          //           all[i].lines,
-          //           sensorsNames,
-          //           all[i].zones));
-          //       sensorsNames = [];
-          //     }
-          //     j = j + (50 - sensorsAmount); // Skip empty sensors
-          //   } else {
-          //     dynamic value = await read(client, j);
-          //     registersStates.add(RegisterState(j, value));
-          //   }
-          //   num finOchka = registers;
-          //   if (j == finOchka) {
-          //     // last register
-          //     devicesStates.add(DeviceState(all[i].index, true, all[i].name,
-          //         all[i].lines, all[i].sensors, all[i].zones, registersStates));
-          //     registersStates = [];
-          //     lost.removeWhere((lEl) => lEl.mac == all[i].mac);
-          //   }
-          // }
-          // -------------------------------------------------------------------
         } catch (e) {
           await client.close();
+          await doPlan(client, all[i].mac, null);
           devicesStates.add(DeviceState(
               all[i].index,
               false,
@@ -385,6 +390,9 @@ class StatesModel extends Cubit<List> {
               all[i].sensors,
               all[i].zones,
               [all[i].ip, all[i].mac, all[i].id, e],
+              [],
+              all[i].counters,
+              [],
               []));
           registersStates = [];
           deviceParamsTemp = [];
@@ -409,21 +417,93 @@ class StatesModel extends Cubit<List> {
 //                    GET DEVICE PARAMS OR THROW ERROR
 // #############################################################################
 /// #### Requests (one) device params and return the result of request
-Future<List> getParams(item) async {
-  deviceParams = [];
-  deviceParamsNew = [];
+// Future<List> getParams(item) async {
+//   deviceParams = [];
+//   deviceParamsNew = [];
+//   bool success = false;
+//   var clientParams = modbus.createTcpClient(item.ip,
+//       port: 503,
+//       mode: modbus.ModbusMode.rtu,
+//       timeout: doradura,
+//       unitId: item.id);
+//   try {
+//     await clientParams.connect();
+//     var response = await read(clientParams, 0);
+//     num sensorsAmount = 0;
+//     if (response.isNotEmpty) {
+//       for (num j = 6; j < response.length; j++) {
+//         var oneRegState = response.elementAt(j).toRadixString(2);
+//         if (oneRegState.length < 32) {
+//           num fixed = 32 - oneRegState.length;
+//           for (int k = 0; k < fixed; k++) {
+//             oneRegState = noll + oneRegState;
+//           }
+//         }
+//         if (j == 6) {
+//           oneRegState = response.elementAt(j);
+//           sensorsAmount = oneRegState;
+//           deviceParams.add(RegisterState(j, oneRegState));
+//         } else {
+//           deviceParams.add(RegisterState(j, oneRegState));
+//         }
+//         if (registers - (50 - sensorsAmount) == j + (50 + 1)) {
+//           // Skip sensors states
+//           // j += 50;
+//           break;
+//         }
+//       }
+//       // inspect(deviceParams);
+//     }
+//     await clientParams.close();
+//     success = true;
+//     deviceParamsNew = deviceParams;
+//     return [success, deviceParamsNew];
+//   } catch (e) {
+//     SystemSound.play(SystemSoundType.alert);
+//     await clientParams.close();
+//     return [false];
+//   } finally {
+//     await clientParams.close();
+//   }
+// }
+
+/// #### Requests (one) device state and return the result of request
+Future<List> getOneDevice(item) async {
   bool success = false;
-  var clientParams = modbus.createTcpClient(item.ip,
-      port: 503,
-      mode: modbus.ModbusMode.rtu,
-      timeout: doradura,
-      unitId: item.id);
+  int id = item.id;
+  var clientOneState = modbus.createTcpClient(item.ip,
+      port: 503, mode: modbus.ModbusMode.rtu, timeout: doradura, unitId: id);
   try {
-    await clientParams.connect();
-    var response = await read(clientParams, 0);
-    num sensorsAmount = 0;
+    await clientOneState.connect();
+    var response = await read(clientOneState, 0, 123);
     if (response.isNotEmpty) {
-      for (num j = 6; j < response.length; j++) {
+      for (num j = 0; j < response.length; j++) {
+        var oneRegState = response.elementAt(j).toRadixString(2);
+        if (oneRegState.length < 32) {
+          num fixed = 32 - oneRegState.length;
+          for (int k = 0; k < fixed; k++) {
+            oneRegState = noll + oneRegState;
+          }
+        }
+        // if (j + 50 - sensorsAmount == registers) {
+        //   break;
+        // }
+        if (j == 6) {
+          oneRegState = response.elementAt(j);
+          deviceOneState.add(RegisterState(j, oneRegState));
+          // Skip sensors params
+          j += 50;
+        } else if (j > 106 && j < 123) {
+          deviceOneCountersStates.add(RegisterState(
+              j, [response.elementAt(j), response.elementAt(j + 1)]));
+          j++;
+        } else {
+          deviceOneState.add(RegisterState(j, oneRegState));
+        }
+      }
+      // Radio params for permanent saving to var
+      num paramsLength = 58;
+      for (num j = 6; j < paramsLength; j++) {
         var oneRegState = response.elementAt(j).toRadixString(2);
         if (oneRegState.length < 32) {
           num fixed = 32 - oneRegState.length;
@@ -432,30 +512,56 @@ Future<List> getParams(item) async {
           }
         }
         if (j == 6) {
-          oneRegState = response.elementAt(j);
-          sensorsAmount = oneRegState;
-          deviceParams.add(RegisterState(j, oneRegState));
+          paramsLength = response.elementAt(j) + 7;
+          deviceOneParams.add(RegisterState(j, response.elementAt(j)));
         } else {
-          deviceParams.add(RegisterState(j, oneRegState));
-        }
-        if (registers - (50 - sensorsAmount) == j + (50 + 1)) {
-          // Skip sensors states
-          // j += 50;
-          break;
+          deviceOneParams.add(RegisterState(j, oneRegState));
         }
       }
-      // inspect(deviceParams);
+      // Counters params for permanent saving to var
+      var responseCP = await read(clientOneState, 123, 8);
+      for (num j = 0; j < responseCP.length; j++) {
+        var oneRegState = responseCP.elementAt(j).toRadixString(2);
+        if (oneRegState.length < 32) {
+          num fixed = 32 - oneRegState.length;
+          for (int k = 0; k < fixed; k++) {
+            oneRegState = noll + oneRegState;
+          }
+        }
+        deviceOneCountersParams.add(RegisterState(j + 123, oneRegState));
+      }
     }
-    await clientParams.close();
+    var devicesStatesOnly = DeviceState(
+        item.index,
+        true,
+        item.name,
+        item.lines,
+        item.sensors,
+        item.zones,
+        deviceOneState,
+        deviceOneParams,
+        item.counters,
+        deviceOneCountersStates,
+        deviceOneCountersParams);
     success = true;
-    deviceParamsNew = deviceParams;
-    return [success, deviceParamsNew];
+    deviceOneState = [];
+    deviceOneParams = [];
+    deviceOneCountersStates = [];
+    deviceOneCountersParams = [];
+    return [success, devicesStatesOnly];
   } catch (e) {
-    SystemSound.play(SystemSoundType.alert);
-    await clientParams.close();
+    await clientOneState.close();
+    deviceOneState = [];
+    deviceOneParams = [];
+    deviceOneCountersStates = [];
+    deviceOneCountersParams = [];
     return [false];
   } finally {
-    await clientParams.close();
+    await clientOneState.close();
+    deviceOneState = [];
+    deviceOneParams = [];
+    deviceOneCountersStates = [];
+    deviceOneCountersParams = [];
   }
 }
 

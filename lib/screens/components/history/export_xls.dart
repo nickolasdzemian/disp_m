@@ -23,7 +23,7 @@ Future<void> exportFile(allevents) async {
   for (int e = 0; e < allevents.length; e++) {
     sheetObject.insertRowIterables([
       allevents[e].formatedStamp,
-      allevents[e].timestamp,
+      allevents[e].timestamp.toString(),
       allevents[e].evType,
       allevents[e].evName,
       allevents[e].deviceName,
@@ -38,10 +38,15 @@ Future<void> exportFile(allevents) async {
   var newFormat = DateFormat("HH-mm-ss_dd-MM-yy");
   var formattedNow = newFormat.format(now);
   var fileBytes = excel.save();
-  File(join("$appDataDirectory/Neptun_history_$formattedNow.xlsx"))
+  File(join("$appDataDirectory/History/Neptun_history_$formattedNow.xlsx"))
     ..createSync(recursive: true)
     ..writeAsBytesSync(fileBytes!);
   // ---------------------------------------------------------------------------
+  if (Platform.isAndroid || Platform.isIOS) {
+    Share.shareXFiles(
+        [XFile("$appDataDirectory/History/Neptun_history_$formattedNow.xlsx")],
+        text: 'Сохраните файл');
+  }
 }
 
 Future<void> _dialogBuilderExport(context, allevents) {
@@ -66,10 +71,10 @@ Future<void> _dialogBuilderExport(context, allevents) {
             child: SelectableText.rich(
               TextSpan(
                 text:
-                    'Будет выполнен экспорт журнала событий\nЭкспорт выполняется в соответствии с заданными фильтрами и текущим отображением на экране\n\nСохраненный файл будет доступен в директории приложения: ', // default text style
+                    'Будет выполнен экспорт журнала событий.\nЭкспорт выполняется в соответствии с заданными фильтрами и текущим отображением на экране.\n\nСохраненный файл будет доступен в директории приложения: ', // default text style
                 children: <TextSpan>[
                   TextSpan(
-                      text: '$appDataDirectory ',
+                      text: '$appDataDirectory/History ',
                       style: const TextStyle(fontStyle: FontStyle.italic)),
                 ],
               ),

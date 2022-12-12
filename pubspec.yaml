@@ -17,8 +17,8 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.01.22+1
-subversion: 'ZP - 1.01.22'
+version: 2.08.30+1
+subversion: '2.08.30'
 
 environment:
   sdk: '>=2.18.0 <3.0.0'
@@ -34,11 +34,6 @@ dependencies:
     sdk: flutter
   # modbus:
   #   path: ./lib/lib/modbus/
-  window_size:
-    git:
-      url: https://github.com/google/flutter-desktop-embedding.git
-      path: plugins/window_size
-
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -57,12 +52,9 @@ dependencies:
   liquid_progress_indicator: ^0.4.0
   package_info_plus: ^1.4.3+1
   url_launcher: ^6.1.5
-  reorderable_grid: ^1.0.4
   flutter_shake_animated: ^0.0.5
-  modbus: ^0.2.0
+  # modbus: ^0.2.0
   wakelock: ^0.6.2
-  # just_audio: ^0.9.29
-  # just_audio_windows: ^0.1.0
   blinking_text: ^1.0.2
   local_notifier: ^0.1.5
   intl: ^0.17.0
@@ -73,6 +65,20 @@ dependencies:
   syncfusion_localizations: ^20.3.50
   flutter_localizations:
     sdk: flutter
+  sentry_flutter: ^6.14.0
+  reorderables: ^0.5.1
+  circular_countdown_timer: ^0.2.3
+  syncfusion_flutter_charts: ^20.3.56
+  window_manager: ^0.2.7
+  share_plus: ^6.3.0
+  audioplayers_android: ^1.1.1
+  flutter_local_notifications: ^12.0.4
+  flutter_native_timezone: ^2.0.0
+  restart_app: ^1.1.0+1
+  permission_handler: ^10.2.0
+  flutter_platform_alert: ^0.3.0
+  date_time_picker: ^2.1.0
+  shelf_multipart: ^1.0.0
 
 dev_dependencies:
   flutter_test:

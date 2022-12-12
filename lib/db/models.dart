@@ -1,15 +1,6 @@
 part of 'db.dart';
 
-class Line {
-  String name;
-  Line(this.name);
-}
-
-class Sensor {
-  String name;
-  Sensor(this.name);
-}
-
+@HiveType(typeId: 0, adapterName: "DeviceAdapter")
 class Device {
   @HiveField(0)
   int index;
@@ -27,8 +18,12 @@ class Device {
   List sensors;
   @HiveField(7)
   List zones;
+  @HiveField(8)
+  List counters;
+  @HiveField(9)
+  List cswitch;
   Device(this.index, this.ip, this.mac, this.id, this.name, this.lines,
-      this.sensors, this.zones);
+      this.sensors, this.zones, this.counters, this.cswitch);
 
   Device.fromJson(Map<String, dynamic> json)
       : index = json['index'],
@@ -38,7 +33,9 @@ class Device {
         name = json['name'],
         lines = json['lines'],
         sensors = json['sensors'],
-        zones = json['zones'];
+        zones = json['zones'],
+        counters = json['counters'],
+        cswitch = json['cswitch'];
   Map<String, dynamic> toJson() {
     return {
       'index': index,
@@ -49,55 +46,13 @@ class Device {
       'lines': lines,
       'sensors': sensors,
       'zones': zones,
+      'counters': counters,
+      'cswitch': cswitch,
     };
   }
 }
 
-class Settings {
-  @HiveField(0)
-  bool autoScan;
-  @HiveField(1)
-  int interval;
-  @HiveField(2)
-  bool server;
-  @HiveField(3)
-  int serverPort;
-  @HiveField(4)
-  List notifications;
-  @HiveField(5)
-  List reserved;
-  @HiveField(6)
-  String updates;
-  @HiveField(7)
-  bool zorro = true;
-  Settings(this.autoScan, this.interval, this.server, this.serverPort,
-      this.notifications, this.reserved, this.updates, this.zorro);
-}
-
-class SettingInt {
-  @HiveField(0)
-  int value;
-  SettingInt(this.value);
-}
-
-class SettingBool {
-  @HiveField(0)
-  bool value;
-  SettingBool(this.value);
-}
-
-class SettingString {
-  @HiveField(0)
-  String value;
-  SettingString(this.value);
-}
-
-class SettingList {
-  @HiveField(0)
-  List value;
-  SettingList(this.value);
-}
-
+@HiveType(typeId: 1, adapterName: "EventListAdapter")
 class EventItem {
   @HiveField(0)
   DateTime timestamp;
@@ -123,7 +78,7 @@ class EventItem {
         info = json['info'];
   Map<String, dynamic> toJson() {
     return {
-      'timestamp': timestamp,
+      'timestamp': timestamp.toIso8601String(),
       'formatedStamp': formatedStamp,
       'evType': evType,
       'evName': evName,
@@ -132,6 +87,67 @@ class EventItem {
     };
   }
 }
+
+@HiveType(typeId: 2, adapterName: "CStatsAdapter")
+class CounterSItem extends HiveObject {
+  @HiveField(0)
+  DateTime date;
+  @HiveField(1)
+  double value;
+  CounterSItem({required this.date, required this.value});
+
+  CounterSItem.fromJson(Map<String, dynamic> json)
+      : date = json['date'],
+        value = json['value'];
+  Map<String, dynamic> toJson() {
+    return {
+      'date': date.toIso8601String(),
+      'value': value,
+    };
+  }
+}
+
+@HiveType(typeId: 3, adapterName: "PlanAdapter")
+class PlanItem {
+  @HiveField(0)
+  int index;
+  @HiveField(1)
+  int type;
+  @HiveField(2)
+  DateTime date;
+  @HiveField(3)
+  String desc;
+  @HiveField(4)
+  int state;
+  @HiveField(5)
+  List todo;
+  @HiveField(6)
+  DateTime resact;
+  PlanItem(this.index, this.type, this.date, this.desc, this.state, this.todo,
+      this.resact);
+
+  PlanItem.fromJson(Map<String, dynamic> json)
+      : index = json['index'],
+        type = json['type'],
+        date = json['date'],
+        desc = json['desc'],
+        state = json['state'],
+        todo = json['todo'],
+        resact = json['resact'];
+  Map<String, dynamic> toJson() {
+    return {
+      'index': index,
+      'type': type,
+      'date': date,
+      'desc': desc,
+      'state': state,
+      'todo': todo,
+      'resact': resact,
+    };
+  }
+}
+
+// -----------------------------------------------------------------------------
 
 class RadioFinal {
   String name = '';
@@ -159,6 +175,42 @@ class Equalal {
   bool alarm2 = false;
   bool sensorIsLost = false;
   bool sensorIsDischarged = false;
+  bool counter = false;
+  bool overlimit = false;
   Equalal(this.index, this.state, this.alarm1, this.alarm2, this.sensorIsLost,
-      this.sensorIsDischarged);
+      this.sensorIsDischarged, this.counter, this.overlimit);
+}
+
+class CounterFinal {
+  int index = 0;
+  String name = '';
+  double value = 0;
+  bool state = false;
+  bool type = false; // true = namur
+  String err = '';
+  String step = '';
+  String position = '';
+  double limit = 0;
+  String reg = '';
+  CounterFinal(this.index, this.name, this.value, this.state, this.type,
+      this.err, this.step, this.position, this.limit, this.reg);
+}
+
+class CounterNavArguments {
+  final String title;
+  final Device itemDb;
+  final CounterFinal item;
+  final Function updateoneDeviceCounters;
+  final Function updateoneDeviceCountersParams;
+
+  CounterNavArguments(this.title, this.itemDb, this.item,
+      this.updateoneDeviceCounters, this.updateoneDeviceCountersParams);
+}
+
+class ProgNavArguments {
+  final Device itemDb;
+  final Function updateEvents;
+  final String key;
+
+  ProgNavArguments(this.itemDb, this.updateEvents, this.key);
 }

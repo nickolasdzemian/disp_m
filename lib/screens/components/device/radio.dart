@@ -2,6 +2,7 @@ part of '../../device.dart';
 
 StatefulBuilder settingsRadio(context, itemDb, oneDeviceStates, oneDeviceParams,
     formKey, updateOneParamStates, updateItemDb, getAdditionalParams) {
+  bool wsize = MediaQuery.of(context).size.width > 800;
   int radioCount = oneDeviceStates[6].value;
   // StateSetter _setState;
 
@@ -26,18 +27,20 @@ StatefulBuilder settingsRadio(context, itemDb, oneDeviceStates, oneDeviceParams,
       String res = 'Ошибка';
       String fg = itemDb.zones[0] != '' ? ': ${itemDb.zones[0]}' : '';
       String sg = itemDb.zones[1] != '' ? ': ${itemDb.zones[1]}' : '';
-      String bg = itemDb.zones[0] != '' || itemDb.zones[1] != ''
+      String bg = (itemDb.zones[0] != '' || itemDb.zones[1] != '') && wsize
           ? ': ${itemDb.zones[0]} и ${itemDb.zones[1]}'
-          : '';
+          : (itemDb.zones[0] != '' || itemDb.zones[1] != '') && !wsize
+              ? '  ${itemDb.zones[0]}\n  ${itemDb.zones[1]}'
+              : '';
       switch (v) {
         case '01':
-          res = 'I группа$fg';
+          res = wsize ? 'I группа$fg' : 'I группа\n$fg';
           break;
         case '10':
-          res = 'II группа$sg';
+          res = wsize ? 'II группа$sg' : 'II группа\n$sg';
           break;
         case '11':
-          res = 'I и II группа$bg';
+          res = wsize ? 'I и II группа$bg' : 'I и II группа\n$bg';
           break;
       }
       return res;
@@ -46,6 +49,7 @@ StatefulBuilder settingsRadio(context, itemDb, oneDeviceStates, oneDeviceParams,
     List radioStateItems = [];
     // ---------------------------------------------------------------------------
     // ------------------------------ Test data-----------------------------------
+    // radioCount = 8;
     // radioStateItems = [
     //   RadioFinal('Датчика', '11', 100, 4, false, false, false),
     //   RadioFinal('Датчика', '00', 80, 3, true, false, false),
@@ -93,7 +97,7 @@ StatefulBuilder settingsRadio(context, itemDb, oneDeviceStates, oneDeviceParams,
             color: Theme.of(context).colorScheme.primary,
             CupertinoIcons.battery_25);
       } else if (v > 10 && v <= 20) {
-        return const Icon(color: Colors.yellow, CupertinoIcons.battery_25);
+        return const Icon(color: Colors.orange, CupertinoIcons.battery_25);
       } else if (v <= 10) {
         return Icon(
             color: Theme.of(context).colorScheme.error,
@@ -119,7 +123,7 @@ StatefulBuilder settingsRadio(context, itemDb, oneDeviceStates, oneDeviceParams,
             color: Theme.of(context).colorScheme.primary,
             CupertinoIcons.chart_bar);
       } else if (v == 1) {
-        return const Icon(color: Colors.yellow, CupertinoIcons.chart_bar);
+        return const Icon(color: Colors.orange, CupertinoIcons.chart_bar);
       } else if (v == 0) {
         return Icon(
             color: Theme.of(context).colorScheme.error,
@@ -163,6 +167,9 @@ StatefulBuilder settingsRadio(context, itemDb, oneDeviceStates, oneDeviceParams,
                   itemCount: radioStateItems.length,
                   itemBuilder: (context, index) {
                     final item = radioStateItems[index];
+                    final String name = !wsize && item.name.length > 13
+                        ? '${item.name.substring(0, 13)}..'
+                        : item.name;
 
                     return Container(
                         margin: const EdgeInsets.only(bottom: 8),
@@ -174,7 +181,7 @@ StatefulBuilder settingsRadio(context, itemDb, oneDeviceStates, oneDeviceParams,
                                   width: 2,
                                   color: Theme.of(context).colorScheme.error)
                               : item.isDischarged
-                                  ? Border.all(width: 1, color: Colors.yellow)
+                                  ? Border.all(width: 1, color: Colors.orange)
                                   : null,
                           color: Theme.of(context).colorScheme.background,
                           borderRadius:
@@ -201,7 +208,7 @@ StatefulBuilder settingsRadio(context, itemDb, oneDeviceStates, oneDeviceParams,
                                   children: [
                                     Text(
                                         style: subTitleStyle(context),
-                                        ' ${item.name}'),
+                                        ' $name'),
                                     Text(
                                         style: descStyle(context),
                                         '  ${parceToTxt(item.param)}')

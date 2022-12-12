@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:modbus/modbus.dart' as modbus;
+import 'package:neptun_m/lib/modbus/modbus.dart' as modbus;
 import 'package:neptun_m/lib/models.dart';
 
 String noll = '0';
@@ -55,6 +55,52 @@ Future<List> sendOneRegister(
   } catch (err) {
     clientSender.close();
     return [false, RegisterState(addr, oneRegState)];
+  } finally {
+    clientSender.close();
+  }
+}
+
+List<int> convertPizda(int v) {
+  int lsb = v & 65535;
+  int msb = v >> 16;
+  return [msb, lsb];
+}
+
+Future<List> sendCounterValue(v, addr, itemDb) async {
+  bool sendResult = false;
+
+  // ############################### PARCE #####################################
+  int liters = (v * 1000).toInt();
+  int lsb = liters & 65535;
+  int msb = liters >> 16;
+  // ###########################################################################
+
+  var clientSender = modbus.createTcpClient(itemDb.ip,
+      port: 503,
+      mode: modbus.ModbusMode.rtu,
+      timeout: const Duration(seconds: 3),
+      unitId: itemDb.id);
+  try {
+    await clientSender.connect();
+
+    // +++++++++++++++++++++++++++++ WRITE +++++++++++++++++++++++++++++++++++++
+    var newRespMsb = await clientSender.writeSingleRegister(addr, msb);
+    var newRespLsb = await clientSender.writeSingleRegister(addr + 1, lsb);
+    // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    if (newRespMsb == msb && newRespLsb == lsb) {
+      sendResult = true; // Successefull write
+    }
+    return [
+      sendResult,
+      RegisterState(addr, [newRespMsb, newRespLsb])
+    ];
+  } catch (err) {
+    clientSender.close();
+    return [
+      false,
+      RegisterState(addr, [msb, lsb])
+    ];
   } finally {
     clientSender.close();
   }

@@ -1,9 +1,7 @@
 part of '../../device.dart';
 
 Column settingsLines(context, itemDb, oneDeviceStates, formKey,
-    updateOneDeviceStates, updateItemDb, state) {
-  // String reg0 = oneDeviceStates[0].value;
-  // bool multiMegaZona = reg0.substring(21, 22) == '1';
+    updateOneDeviceStates, updateItemDb, state, getAdditionalParams) {
   void updateNewRegister(ind, res) {
     if (res[0]) {
       updateOneDeviceStates(ind, res[1]);
@@ -17,15 +15,32 @@ Column settingsLines(context, itemDb, oneDeviceStates, formKey,
     }
   }
 
+  List<String> txts = [];
+  if (MediaQuery.of(context).size.width > 800) {
+    txts = [
+      '   Переименование зон для корректного отображения уведомлений в многозонном режиме',
+      '   Переименование, установка типа, назначение группы',
+      '   Режим переключения и назначение группы для срабатывания реле',
+      '   Переключение отображения счётиков по слотам'
+    ];
+  } else {
+    txts = [
+      '   Переименование зон контроля\n   для многозонного режима',
+      '   Переименование, установка типа,\n   назначение группы',
+      '   Режим переключения и назначение зоны',
+      '   Отображение счётиков по слотам'
+    ];
+  }
+
   return Column(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(style: titleStyle(context), 'Настройки'),
-        // ------------------------------------------------------------------------------------------------
+        // ---------------------------------------------------------------------
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Column(
               children: [
@@ -37,9 +52,7 @@ Column settingsLines(context, itemDb, oneDeviceStates, formKey,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(style: subTitleStyle(context), '  Названия зон'),
-                        Text(
-                            style: descStyle(context),
-                            '   Переименование зон для корректного отображения уведомлений в многозонном режиме')
+                        Text(style: descStyle(context), txts[0])
                       ]),
                 ])
               ],
@@ -57,10 +70,10 @@ Column settingsLines(context, itemDb, oneDeviceStates, formKey,
             ),
           ],
         ),
-        // ------------------------------------------------------------------------------------------------
+        // ---------------------------------------------------------------------
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Column(
               children: [
@@ -74,9 +87,7 @@ Column settingsLines(context, itemDb, oneDeviceStates, formKey,
                         Text(
                             style: subTitleStyle(context),
                             '  Настройки проводных линий'),
-                        Text(
-                            style: descStyle(context),
-                            '   Переименование, установка типа, назначение группы')
+                        Text(style: descStyle(context), txts[1])
                       ]),
                 ])
               ],
@@ -94,10 +105,10 @@ Column settingsLines(context, itemDb, oneDeviceStates, formKey,
             ),
           ],
         ),
-        // ------------------------------------------------------------------------------------------------
+        // ---------------------------------------------------------------------
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Column(
               children: [
@@ -111,9 +122,7 @@ Column settingsLines(context, itemDb, oneDeviceStates, formKey,
                         Text(
                             style: subTitleStyle(context),
                             '  Настройка реле событий'),
-                        Text(
-                            style: descStyle(context),
-                            '   Режим переключения и назначение группы для срабатывания реле')
+                        Text(style: descStyle(context), txts[2])
                       ]),
                 ])
               ],
@@ -131,6 +140,41 @@ Column settingsLines(context, itemDb, oneDeviceStates, formKey,
             ),
           ],
         ),
-        // ------------------------------------------------------------------------------------------------
+        // ---------------------------------------------------------------------
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Column(
+              children: [
+                Row(children: [
+                  Icon(
+                      color: Theme.of(context).colorScheme.secondary,
+                      CupertinoIcons.gauge),
+                  Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                            style: subTitleStyle(context),
+                            '  Отображение счётчиков'),
+                        Text(style: descStyle(context), txts[3])
+                      ]),
+                ])
+              ],
+            ),
+            IconButton(
+              icon: Icon(
+                CupertinoIcons.right_chevron,
+                size: 22,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              onPressed: () {
+                _dialogBuilderCswitch(context, itemDb, formKey, updateItemDb,
+                    oneDeviceStates, updateNewRegister, getAdditionalParams);
+              },
+            ),
+          ],
+        ),
+        // ---------------------------------------------------------------------
       ]);
 }

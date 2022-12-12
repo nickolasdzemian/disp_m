@@ -8,19 +8,22 @@ AppBar historyAppBar(context, reorder, filterValue, invertOrder, filterType,
           Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.primary),
       onPressed: () => Navigator.of(context).pop(),
     ),
-    title: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Icon(
-            CupertinoIcons.doc_text,
-            size: 22,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          Text(
-              style: TextStyle(color: Theme.of(context).colorScheme.primary),
-              '  Журнал событий'),
-        ]),
+    title: MediaQuery.of(context).size.width > 800
+        ? Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+                Icon(
+                  CupertinoIcons.doc_text,
+                  size: 22,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                Text(
+                    style:
+                        TextStyle(color: Theme.of(context).colorScheme.primary),
+                    '  Журнал событий'),
+              ])
+        : const SizedBox(),
     actions: [
       Row(
         children: [

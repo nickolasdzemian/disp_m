@@ -182,7 +182,9 @@ SizedBox editZoneName(editData, int number) {
               editData.name,
               editData.lines,
               editData.sensors,
-              obstructZonesNames)
+              obstructZonesNames,
+              editData.counters,
+              editData.cswitch)
         },
         validator: (String? value) {
           return (value != null && value.length < 22)
@@ -236,7 +238,9 @@ SizedBox editLineName(editData, int number) {
               editData.name,
               obstructLinesNames,
               editData.sensors,
-              editData.zones)
+              editData.zones,
+              editData.counters,
+              editData.cswitch)
         },
         validator: (String? value) {
           return (value != null && value.length < 30)
@@ -359,7 +363,7 @@ SizedBox editLineZones(editData, valvesLine, context, reg, regIdx, addr,
 /// Relay config
 // with test busy indicator in icon place
 SizedBox editRelayConfig(editData, triggerValve, alarmValve, context, reg,
-    updateNewRegister, stateReg, busy, setBusy) {
+    updateNewRegister, stateReg, busy, setBusy, bool big) {
   List<String> list = <String>['00', '01', '10', '11'];
   String parceToTxt(v) {
     String res = 'Ошибка';
@@ -400,7 +404,9 @@ SizedBox editRelayConfig(editData, triggerValve, alarmValve, context, reg,
                       child: CircularProgressIndicator(
                           strokeWidth: 1.5,
                           color: Theme.of(context).colorScheme.secondary)),
-              Text(style: subTitleStyle(context), '  При закрытии кранов:'),
+              Text(
+                  style: subTitleStyle(context),
+                  '  ${big ? 'При закрытии кранов:' : 'При закрытии\n  кранов:'}'),
             ]),
             DropdownButton<String>(
               key: UniqueKey(),
@@ -489,6 +495,87 @@ SizedBox editRelayConfig(editData, triggerValve, alarmValve, context, reg,
 // =============================================================================
 
 // #############################################################################
+// --------------------------------- COUNTERS ----------------------------------
+// #############################################################################
+/// Select counter to be displayed
+Column editCounterVisibility(context, cswitch, stateCswitch, i) {
+  num snum = 0;
+  switch (i) {
+    case 0:
+      snum = 1;
+      break;
+    case 2:
+      snum = 2;
+      break;
+    case 4:
+      snum = 3;
+      break;
+    case 6:
+      snum = 4;
+      break;
+  }
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(style: titleStyle(context), 'Слот $snum'),
+      marginVertical(),
+      SizedBox(
+        width: 200,
+        height: 35,
+        child:
+            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          Row(children: [
+            Icon(
+                color: Theme.of(context).colorScheme.secondary,
+                CupertinoIcons.drop),
+            Text(style: subTitleStyle(context), '  Счетчик 1:'),
+          ]),
+          Transform.scale(
+            scale: 0.75,
+            child: CupertinoSwitch(
+              value: cswitch[i],
+              thumbColor: CupertinoColors.white,
+              trackColor: CupertinoColors.inactiveGray.withOpacity(0.4),
+              activeColor: CupertinoColors.systemGreen.withOpacity(0.6),
+              onChanged: (bool? value) {
+                stateCswitch(i, !cswitch[i]);
+              },
+            ),
+          )
+        ]),
+      ),
+      SizedBox(
+        width: 200,
+        height: 35,
+        child:
+            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          Row(children: [
+            Icon(
+                color: Theme.of(context).colorScheme.secondary,
+                CupertinoIcons.drop),
+            Text(style: subTitleStyle(context), '  Счетчик 2:'),
+          ]),
+          Transform.scale(
+            scale: 0.75,
+            child: CupertinoSwitch(
+              value: cswitch[i + 1],
+              thumbColor: CupertinoColors.white,
+              trackColor: CupertinoColors.inactiveGray.withOpacity(0.4),
+              activeColor: CupertinoColors.systemGreen.withOpacity(0.6),
+              onChanged: (bool? value) {
+                stateCswitch(i + 1, !cswitch[i + 1]);
+              },
+            ),
+          )
+        ]),
+      )
+    ],
+  );
+}
+// =============================================================================
+
+// #############################################################################
 // ------------------------------- RADIO SENSOR --------------------------------
 // #############################################################################
 /// Select zone to be controled by sensor
@@ -542,7 +629,8 @@ SizedBox editRadioZones(editData, valvesLine, context, reg, regIdx, addr,
               if (res[0]) {
                 updateNewRegister(addr, res);
                 stateReg(addr, res[1]);
-                getAdditionalParams(); // UPDATE DIALOG BUILDER AND FATHER STATE
+                getAdditionalParams(
+                    false); // UPDATE DIALOG BUILDER AND FATHER STATE
               }
             },
             items: list.map<DropdownMenuItem<String>>((String value) {
@@ -582,7 +670,9 @@ SizedBox editSensorName(editData, int number) {
               editData.name,
               editData.lines,
               radiosNamesEdit,
-              editData.zones)
+              editData.zones,
+              editData.counters,
+              editData.cswitch)
         },
         validator: (String? value) {
           return (value != null && value.length < 30)

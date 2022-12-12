@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "298752181289",
+    "project_id": "disp-neptun",
+    "storage_bucket": "disp-neptun.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:298752181289:android:ce20f2311e630b3c100838",
+        "android_client_info": {
+          "package_name": "com.example.neptun_m"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "298752181289-hju0fhfjo2qrnb4f27pd94bg3nt6lehu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC2mxFYl07hWm-gD4blQYG9ix4p62llQ8o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "298752181289-hju0fhfjo2qrnb4f27pd94bg3nt6lehu.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

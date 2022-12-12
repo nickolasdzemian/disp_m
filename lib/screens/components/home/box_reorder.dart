@@ -9,9 +9,9 @@ ShakeWidget deviceReorderBoxView(context, item, child) {
       autoPlay: true,
       enableWebMouseHover: true,
       child: Container(
-          height: 200,
-          width: 300,
-          margin: const EdgeInsets.only(top: 25, left: 17.5, right: 17.5),
+          height: 265,
+          width: 360,
+          margin: const EdgeInsets.all(5),
           padding: const EdgeInsets.all(20.0),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,

@@ -53,7 +53,7 @@ Column settingsBoxAdd(context, bigValue, addDevices, adding, addDevice,
             children: [
               ElevatedButton(
                 onPressed: () {
-                  addDevices();
+                  if (!adding) addDevices();
                 },
                 child: Row(children: [
                   const Icon(
@@ -71,7 +71,7 @@ Column settingsBoxAdd(context, bigValue, addDevices, adding, addDevice,
               ),
               ElevatedButton(
                 onPressed: () {
-                  addDevice();
+                  if (!adding) addDevice();
                 },
                 child: Row(children: [
                   const Icon(

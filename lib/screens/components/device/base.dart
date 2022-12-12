@@ -1,6 +1,7 @@
 part of '../../device.dart';
 
 Column settingsBase(context, itemDb, formKey, updateItemDb, state) {
+  double wsize = MediaQuery.of(context).size.width;
   return Column(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -22,7 +23,7 @@ Column settingsBase(context, itemDb, formKey, updateItemDb, state) {
         // ---------------------------------------------------------------------
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Column(
               children: [
@@ -39,7 +40,7 @@ Column settingsBase(context, itemDb, formKey, updateItemDb, state) {
                             text: '  Имя устройства: ',
                             children: <TextSpan>[
                               TextSpan(
-                                  text: '${itemDb.name}',
+                                  text: wsize > 800 ? '${itemDb.name}' : '',
                                   style: const TextStyle(
                                       fontWeight: FontWeight.normal)),
                             ],
@@ -68,7 +69,7 @@ Column settingsBase(context, itemDb, formKey, updateItemDb, state) {
         // ---------------------------------------------------------------------
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Column(
               children: [
@@ -85,7 +86,7 @@ Column settingsBase(context, itemDb, formKey, updateItemDb, state) {
                             text: '  IP-адрес: ',
                             children: <TextSpan>[
                               TextSpan(
-                                  text: '${itemDb.ip}',
+                                  text: wsize > 800 ? '${itemDb.ip}' : '',
                                   style: const TextStyle(
                                       fontWeight: FontWeight.normal)),
                             ],
@@ -114,7 +115,7 @@ Column settingsBase(context, itemDb, formKey, updateItemDb, state) {
         // ---------------------------------------------------------------------
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Column(
               children: [
@@ -131,7 +132,7 @@ Column settingsBase(context, itemDb, formKey, updateItemDb, state) {
                             text: '  Текущий UnitID: ',
                             children: <TextSpan>[
                               TextSpan(
-                                  text: '${itemDb.id}',
+                                  text: wsize > 800 ? '${itemDb.id}' : '',
                                   style: const TextStyle(
                                       fontWeight: FontWeight.normal)),
                             ],
@@ -139,7 +140,7 @@ Column settingsBase(context, itemDb, formKey, updateItemDb, state) {
                         ),
                         Text(
                             style: descStyle(context),
-                            '   Изменение UnitID устройства (по умолчанию 240)')
+                            '   Изменение UnitID устройства ${wsize > 800 ? '(по умолчанию 240)' : ''}')
                       ])
                 ])
               ],
@@ -157,39 +158,5 @@ Column settingsBase(context, itemDb, formKey, updateItemDb, state) {
             ),
           ],
         ),
-        // ------------------------------------------------------------------------------------------------
-        // Row(
-        //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        //   crossAxisAlignment: CrossAxisAlignment.start,
-        //   children: [
-        //     Column(
-        //       children: [
-        //         Row(children: [
-        //           Icon(
-        //               color: Theme.of(context).colorScheme.secondary,
-        //               CupertinoIcons.text_justifyleft),
-        //           Column(
-        //               crossAxisAlignment: CrossAxisAlignment.start,
-        //               children: [
-        //                 Text(style: subTitleStyle(context), '  ${itemDb.id}'),
-        //                 Text(
-        //                     style: descStyle(context),
-        //                     '   Переименование проводных линий')
-        //               ])
-        //         ])
-        //       ],
-        //     ),
-        //     IconButton(
-        //       icon: const Icon(
-        //         CupertinoIcons.right_chevron,
-        //         size: 22,
-        //       ),
-        //       onPressed: () {
-        //         _dialogBuilder(context, itemDb, formKey, 3, updateItemDb);
-        //       },
-        //     ),
-        //   ],
-        // ),
-        // ------------------------------------------------------------------------------------------------
       ]);
 }

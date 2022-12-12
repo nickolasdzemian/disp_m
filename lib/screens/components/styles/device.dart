@@ -32,11 +32,13 @@ TextStyle subTitleValueStyle(context) {
   );
 }
 
-TextStyle bigValueStyle(context) {
+TextStyle bigValueStyle(context, value) {
+  double wsize = MediaQuery.of(context).size.width;
+  int lena = value.toString().length;
   return TextStyle(
     color: Theme.of(context).colorScheme.secondary,
     fontWeight: FontWeight.w600,
-    fontSize: 25,
+    fontSize: wsize > 800 ? 25 : (25 / lena) + 13,
   );
 }
 
@@ -58,6 +60,14 @@ TextStyle descStyle(context) {
   );
 }
 
+TextStyle descStyleErr(context) {
+  return TextStyle(
+    color: Theme.of(context).colorScheme.error,
+    fontWeight: FontWeight.w200,
+    fontSize: 10,
+  );
+}
+
 TextStyle descButton(context) {
   return TextStyle(
     color: Theme.of(context).colorScheme.secondary,
@@ -69,8 +79,6 @@ TextStyle descButton(context) {
 Container linesBox(child, context) {
   return Container(
       key: UniqueKey(),
-      // height: 200,
-      // width: 300,
       margin: const EdgeInsets.only(top: 5, bottom: 25, left: 5, right: 5),
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(

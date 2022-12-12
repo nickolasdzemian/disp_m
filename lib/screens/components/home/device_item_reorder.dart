@@ -22,9 +22,9 @@ deviceItemReorder(context, item) {
             Text(style: subTitleStyle(context), '$name'),
             Text(style: descStyle(context), 'IP-адрес: ${item.ip}'),
             Text(style: descStyle(context), 'Mac-адрес: ${item.mac}'),
-            const SizedBox(height: 25),
+            const SizedBox(height: 42),
           ],
         ),
-        Text(style: bigValueStyle(context), '${item.index}'),
+        Text(style: bigValueStyle(context), '${item.index + 1}'),
       ]);
 }
